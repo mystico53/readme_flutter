@@ -51,45 +51,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void sendTextToServer() async {
     final text = textController.text;
-    final filename =
-        'audio_${DateTime.now().millisecondsSinceEpoch}.wav'; // Generate filename
+    final filename = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-    try {
-      print("trying");
-      // Create the request
-      var request = http.Request('POST', Uri.parse(AppConfig.ttsUrl))
-        ..headers.addAll({'Content-Type': 'application/json'})
-        ..body = jsonEncode({'text': text, 'filename': filename});
+    var request = http.Request('POST', Uri.parse(AppConfig.ttsUrl))
+      ..headers.addAll({'Content-Type': 'application/json'})
+      ..body = jsonEncode({'text': text, 'filename': filename});
 
-      // Send the request and await the streamed response
-      var streamedResponse =
-          await request.send().timeout(const Duration(seconds: 30));
+    var streamedResponse =
+        await request.send().timeout(const Duration(seconds: 30));
 
-      if (streamedResponse.statusCode == 200) {
-        // Get the path to save the file
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/$filename'; // Unique file path
-        final audioFile = File(filePath);
-
-        startCheckingStatus(filename);
-
-        // Stream the bytes to the file
-        await streamedResponse.stream.pipe(audioFile.openWrite());
-
-        setState(() {
-          audioUrl = AppConfig.checkAudioStatusUrl(filename);
-          print("audioUrl $audioUrl");
-        });
-      } else {
-        // Handle the case when the server responds with an error
-        print('Server responded with error: ${streamedResponse.statusCode}');
-      }
-    } on TimeoutException catch (e) {
-      // Handle the timeout exception
-      print('Request to server timed out: $e');
-    } catch (e) {
-      // Handle other exceptions
-      print('An error occurred: $e');
+    if (streamedResponse.statusCode == 200) {
+      print("Text sent successfully, starting status check.");
+      handleProcessing(filename); // Now, just start checking status
+    } else {
+      print('Server responded with error: ${streamedResponse.statusCode}');
     }
   }
 
@@ -100,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Future<Map<String, String>> checkAudioStatus(String fileName) async {
+  Future<Map<String, String>> checkReadyStatus(String fileName) async {
     try {
       final url = AppConfig.checkAudioStatusUrl(fileName);
       final response = await http.get(Uri.parse(url));
@@ -108,55 +83,51 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("checked status for $fileName and received $data");
-        stopCheckingStatus();
         return {
-          'status': data['status'], // This is correct now
-          'gcs_url': data['gcs_url'] ??
-              '', // Providing a default value if gcs_url is not present
+          'status': data['status'],
+          'gcs_url': data['gcs_url'] ?? '',
         };
       } else {
         print('Server error: ${response.statusCode} for $fileName');
-        stopCheckingStatus();
-        return {
-          'status': 'Server error',
-          'gcs_url': '',
-        };
+        return {'status': 'Server error', 'gcs_url': ''};
       }
     } catch (e) {
       print('An error occurred: $e for $fileName');
-      stopCheckingStatus();
-      return {
-        'status': 'Error',
-        'gcs_url': '',
-      };
+      return {'status': 'Error', 'gcs_url': ''};
     }
   }
 
-  void startCheckingStatus(String fileName) {
-    const period = Duration(
-        seconds: 1); // Adjusted to every 5 seconds as mentioned in the comment
+  void handleProcessing(String fileName) {
+    const period = Duration(seconds: 1);
     _timer = Timer.periodic(period, (timer) async {
-      final result = await checkAudioStatus(fileName);
-      final status = result['status'];
-      final gcsUrl = result['gcs_url'];
-
-      print("Status: $status");
-      if (gcsUrl?.isNotEmpty == true) {
-        print("GCS URL: $gcsUrl");
-        timer.cancel();
+      final result = await checkReadyStatus(fileName);
+      if (result['status'] == 'ready' && result['gcs_url']!.isNotEmpty) {
+        timer.cancel(); // Stop monitoring once the file is ready
+        print("lets play it");
+        String localFilePath = await prepareLocalFilePath(fileName);
+        //await downloadAudioFile(result['gcs_url']!, localFilePath);
+        // Optionally, play the audio file after download
+        //playAudioFromFile(localFilePath);
+        streamAudioFromUrl(result['gcs_url']!);
       }
-
-      if (status == "ready") {
-        timer.cancel(); // Stop checking once the file is ready
-        // Handle the ready status, e.g., downloading/streaming the file using gcsUrl
-        // Example: downloadAudio(gcsUrl); or whatever your next step is
-      } else if (status == "Server error" || status == "Error") {
-        timer
-            .cancel(); // Consider stopping the timer on errors too, or handle retries differently
-        // Handle error
-      }
-      // If the status is not "ready" or an error, the timer will continue until it's stopped.
     });
+  }
+
+  Future<String> prepareLocalFilePath(String filename) async {
+    final directory = await getApplicationDocumentsDirectory();
+    return '${directory.path}/$filename';
+  }
+
+  void streamAudioFromUrl(String url) async {
+    final player = AudioPlayer();
+    // Convert or ensure the URL is in the correct format
+    final httpsUrl = convertGsUrlToHttps(url);
+    await player.play(UrlSource(httpsUrl));
+  }
+
+  String convertGsUrlToHttps(String gsUrl) {
+    // Implement conversion logic here, or return a directly accessible HTTPS URL
+    return gsUrl.replaceFirst('gs://', 'https://storage.googleapis.com/');
   }
 
   void stopCheckingStatus() {
