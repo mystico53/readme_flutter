@@ -1,12 +1,13 @@
+import 'dart:io';
+import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io';
-import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
 import 'app_config.dart'; // Import AppConfig
-import 'dart:async';
 
 void main() {
   runApp(MyApp());
@@ -27,15 +28,39 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late StreamSubscription _intentSub;
+  final _sharedFiles = <SharedMediaFile>[];
+
   final textController = TextEditingController();
+  final scrollController = ScrollController();
   String audioUrl = '';
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    textController.addListener(
-        _updateCharacterCount); // Add listener to the textController
+    textController.addListener(_updateCharacterCount);
+
+    // Listen for shared URLs/text when the app is already running
+    _intentSub = ReceiveSharingIntent.getMediaStream().listen((value) {
+      setState(() {
+        _sharedFiles.clear();
+        _sharedFiles.addAll(value);
+        String filesString =
+            _sharedFiles.map((f) => f.toMap().toString()).join(", ");
+        textController.text = filesString;
+        Future.delayed(Duration(milliseconds: 100), () {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        });
+        //print(_sharedFiles.map((f) => f.toMap()));
+      });
+    }, onError: (err) {
+      print("getIntentDataStream error: $err");
+    });
   }
 
   void _updateCharacterCount() {
@@ -46,16 +71,16 @@ class _MyHomePageState extends State<MyHomePage> {
     double costPerCharacter = 0.000016;
     int characterCount = textController.text.length;
     double totalCost = characterCount * costPerCharacter;
-    return totalCost.toStringAsFixed(6); // Format to 2 decimal places
+    return totalCost.toStringAsFixed(4); // Format to 2 decimal places
   }
 
   void sendTextToServer() async {
     final text = textController.text;
     final filename = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-    var request = http.Request('POST', Uri.parse(AppConfig.ttsUrl))
-      ..headers.addAll({'Content-Type': 'application/json'})
-      ..body = jsonEncode({'text': text, 'filename': filename});
+    var request = http.Request('POST', AppConfig.ttsUrl);
+    request.headers.addAll({'Content-Type': 'application/json'});
+    request.body = jsonEncode({'text': text, 'filename': filename});
 
     var streamedResponse =
         await request.send().timeout(const Duration(seconds: 30));
@@ -72,13 +97,14 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     textController.removeListener(_updateCharacterCount);
     textController.dispose();
+    _intentSub.cancel();
     super.dispose();
   }
 
   Future<Map<String, String>> checkReadyStatus(String fileName) async {
     try {
       final url = AppConfig.checkAudioStatusUrl(fileName);
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -113,16 +139,54 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void cleanWithAI() async {
+    String text = textController.text;
+    String cleanedText = await sendTextToAI(text);
+    setState(() {
+      textController.text = cleanedText;
+    });
+  }
+
+  Future<String> sendTextToAI(String text) async {
+    final response = await http.post(
+      AppConfig.generateAiTextUrl,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'text': text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Assuming the response is a JSON object with a key 'generated_text'
+      final jsonResponse = jsonDecode(response.body);
+      String generatedText = jsonResponse['generated_text'];
+
+      // Replace '\n' with spaces
+      generatedText = generatedText.replaceAll('\n', ' ');
+
+      return generatedText;
+    } else {
+      // Handle error response
+      print('Failed to generate AI text');
+      return text; // Return the original text or handle accordingly
+    }
+  }
+
   Future<String> prepareLocalFilePath(String filename) async {
     final directory = await getApplicationDocumentsDirectory();
     return '${directory.path}/$filename';
   }
 
   void streamAudioFromUrl(String url) async {
-    final player = AudioPlayer();
+    //final player = AudioPlayer();
     // Convert or ensure the URL is in the correct format
     final httpsUrl = convertGsUrlToHttps(url);
-    await player.play(UrlSource(httpsUrl));
+    setState(() {
+      audioUrl = httpsUrl;
+    });
+    //await player.play(UrlSource(httpsUrl));
   }
 
   String convertGsUrlToHttps(String gsUrl) {
@@ -146,6 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             TextField(
               controller: textController,
+              scrollController: scrollController,
               decoration: const InputDecoration(labelText: 'Enter Text'),
               keyboardType: TextInputType.multiline,
               maxLines: 6,
@@ -168,7 +233,24 @@ class _MyHomePageState extends State<MyHomePage> {
                   OutlinedButton(
                     onPressed: () {
                       Clipboard.getData(Clipboard.kTextPlain).then((value) {
-                        textController.text = value?.text ?? '';
+                        // Get current text from the controller
+                        String currentText = textController.text;
+                        // Append the clipboard text to the current text
+                        String newText = currentText + (value?.text ?? '');
+                        // Update the controller with the new text
+                        textController.text = newText;
+                        // Set the cursor at the end of the new text
+                        textController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: newText.length));
+
+                        // Scroll to the bottom of the TextField
+                        Future.delayed(Duration(milliseconds: 100), () {
+                          scrollController.animateTo(
+                            scrollController.position.maxScrollExtent,
+                            duration: Duration(milliseconds: 200),
+                            curve: Curves.easeOut,
+                          );
+                        });
                       });
                     },
                     child: const Text('Paste Text'),
@@ -190,8 +272,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
+            const SizedBox(width: 10), // Spacing between buttons
+            ElevatedButton(
+              onPressed: () {
+                cleanWithAI();
+              },
+              child: const Text('Clean with AI'),
+            ),
             SizedBox(height: 20),
-            //if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
+            if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
           ],
         ),
       ),

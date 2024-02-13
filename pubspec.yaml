@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.0
+  receive_sharing_intent: ^1.6.7
   audioplayers: 5.2.1 # Use the latest version available
 
 dev_dependencies:
