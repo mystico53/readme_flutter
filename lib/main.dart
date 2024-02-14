@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
 import 'app_config.dart'; // Import AppConfig
+import 'voice_model.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,9 +28,95 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+class VoiceSelectionWidget extends StatefulWidget {
+  final Function(VoiceModel) onSelectedVoiceChanged;
+  VoiceSelectionWidget({required this.onSelectedVoiceChanged});
+  @override
+  _VoiceSelectionWidgetState createState() => _VoiceSelectionWidgetState();
+}
+
+class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
+  List<VoiceModel> voices = [
+    VoiceModel(
+        name: "US - Craig",
+        languageCode: "en-US",
+        voiceName: "en-US-Neural2-J",
+        speakingRate: 0.85),
+    VoiceModel(
+        name: "US - Malcolm (Poly)",
+        languageCode: "en-US",
+        voiceName: "en-US-Polyglot-1",
+        speakingRate: 0.85),
+    VoiceModel(
+        name: "US - Serene (Elite)",
+        languageCode: "en-US",
+        voiceName: "en-US-Studio-O",
+        speakingRate: 0.85),
+    VoiceModel(
+        name: "GB - Bishop",
+        languageCode: "en-GB",
+        voiceName: "en-GB-Neural2-D",
+        speakingRate: 0.85),
+    VoiceModel(
+        name: "DE - Sabine",
+        languageCode: "de-DE",
+        voiceName: "de-DE-Neural2-C",
+        speakingRate: 1.0),
+    VoiceModel(
+        name: "DE - Rüdiger (Poly)",
+        languageCode: "de-DE",
+        voiceName: "de-DE-Polyglot-1",
+        speakingRate: 1.0),
+    VoiceModel(
+        name: "DE - Stefan (Elite)",
+        languageCode: "de-DE",
+        voiceName: "de-DE-Studio-B",
+        speakingRate: 1.0),
+    VoiceModel(
+        name: "DE- Jutta (Elite)",
+        languageCode: "de-DE",
+        voiceName: "de-DE-Studio-C",
+        speakingRate: 1.0)
+    // Add more voice options as needed
+  ];
+
+  VoiceModel? selectedVoice;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize selectedVoice with Craig's VoiceModel
+    selectedVoice = voices.firstWhere((voice) => voice.name == "Craig",
+        orElse: () => voices.first);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<VoiceModel>(
+      value: selectedVoice,
+      hint: Text("Select a voice"),
+      onChanged: (VoiceModel? newValue) {
+        if (newValue != null) {
+          setState(() {
+            selectedVoice = newValue;
+          });
+          widget.onSelectedVoiceChanged(newValue);
+        }
+      },
+      items: voices.map<DropdownMenuItem<VoiceModel>>((VoiceModel voice) {
+        return DropdownMenuItem<VoiceModel>(
+          value: voice,
+          child: Text(voice.name),
+        );
+      }).toList(),
+    );
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   late StreamSubscription _intentSub;
   final _sharedFiles = <SharedMediaFile>[];
+  VoiceModel? _currentSelectedVoice;
 
   final textController = TextEditingController();
   final scrollController = ScrollController();
@@ -61,6 +148,24 @@ class _MyHomePageState extends State<MyHomePage> {
     }, onError: (err) {
       print("getIntentDataStream error: $err");
     });
+    ReceiveSharingIntent.getInitialMedia().then((value) {
+      setState(() {
+        _sharedFiles.clear();
+        _sharedFiles.addAll(value);
+        String filesString =
+            _sharedFiles.map((f) => f.toMap().toString()).join(", ");
+        textController.text = filesString;
+
+        // Tell the library that we are done processing the intent.
+        ReceiveSharingIntent.reset();
+      });
+    });
+  }
+
+  void _updateSelectedVoice(VoiceModel voice) {
+    setState(() {
+      _currentSelectedVoice = voice;
+    });
   }
 
   void _updateCharacterCount() {
@@ -78,9 +183,28 @@ class _MyHomePageState extends State<MyHomePage> {
     final text = textController.text;
     final filename = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
+    // Modify this part to include selectedVoice's parameters
+    final languageCode = _currentSelectedVoice?.languageCode ??
+        'en-US'; // Default to 'en-US' if null
+    final voiceName = _currentSelectedVoice?.voiceName ??
+        'en-US-Neural2-J'; // Default voice if null
+    final speakingRate =
+        _currentSelectedVoice?.speakingRate ?? 1.0; // Default voice if null
+
+    print('Sending text to server with the following voice parameters:');
+    print('Language Code: $languageCode');
+    print('Voice Name: $voiceName');
+    print('Speaking Rate: $speakingRate');
+
     var request = http.Request('POST', AppConfig.ttsUrl);
     request.headers.addAll({'Content-Type': 'application/json'});
-    request.body = jsonEncode({'text': text, 'filename': filename});
+    request.body = jsonEncode({
+      'text': text,
+      'filename': filename,
+      'languageCode': languageCode, // Include language code
+      'voiceName': voiceName, // Include voice name
+      'speakingRate': speakingRate
+    });
 
     var streamedResponse =
         await request.send().timeout(const Duration(seconds: 30));
@@ -272,6 +396,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
+            VoiceSelectionWidget(onSelectedVoiceChanged: _updateSelectedVoice),
             const SizedBox(width: 10), // Spacing between buttons
             ElevatedButton(
               onPressed: () {
