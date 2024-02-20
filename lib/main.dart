@@ -9,8 +9,14 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
 import 'app_config.dart'; // Import AppConfig
 import 'voice_model.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
@@ -403,6 +409,28 @@ class _MyHomePageState extends State<MyHomePage> {
                 cleanWithAI();
               },
               child: const Text('Clean with AI'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                var url = Uri.parse(
+                    'http://10.0.2.2:5001/firebase-readme-123/us-central1/cleanText');
+
+                // Fixed string you want to send
+                String fixedString = "Tell me a kids joke";
+
+                var response = await http.post(
+                  url,
+                  headers: {"Content-Type": "application/json"},
+                  // Use the fixed string here
+                  body: jsonEncode({
+                    "text": fixedString
+                  }), // Sending JSON data with the fixed string
+                );
+
+                print('Response status: ${response.statusCode}');
+                print('Response body: ${response.body}');
+              },
+              child: Text('Call Cloud Function'),
             ),
             SizedBox(height: 20),
             if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),

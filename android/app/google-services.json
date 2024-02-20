@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "431185867269",
+    "project_id": "firebase-readme-123",
+    "storage_bucket": "firebase-readme-123.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431185867269:android:03d48799e3688c83efe26c",
+        "android_client_info": {
+          "package_name": "com.example.readme_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD710uAbznLwYdW_JDTG3m-YXF0DOWKZvE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

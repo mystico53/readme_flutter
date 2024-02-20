@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     
     <application
-        android:label="readme_app"
+        android:label="Lisme"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
