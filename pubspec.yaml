@@ -1,7 +1,7 @@
 name: readme_app
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 0.1.0+3
 
 environment:
   sdk: '>=3.2.5 <4.0.0'
@@ -12,12 +12,22 @@ dependencies:
   http: ^1.2.0
   receive_sharing_intent: ^1.6.7
   audioplayers: 5.2.1 # Use the latest version available
-  cloud_firestore: ^4.15.4
+  cloud_firestore: ^4.15.5
+  firebase_crashlytics: ^3.4.15
+  uuid: ^4.3.3
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.1
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/icon/icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
 
 flutter:
   uses-material-design: true

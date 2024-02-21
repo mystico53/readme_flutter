@@ -9,14 +9,21 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
 import 'app_config.dart'; // Import AppConfig
 import 'voice_model.dart';
+import 'user_manager.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:uuid/uuid.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Set up Firebase Crashlytics error handling as the default error handler
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+
   runApp(MyApp());
 }
 
@@ -120,6 +127,7 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String userId = '';
   late StreamSubscription _intentSub;
   final _sharedFiles = <SharedMediaFile>[];
   VoiceModel? _currentSelectedVoice;
@@ -132,6 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _initUser();
     textController.addListener(_updateCharacterCount);
 
     // Listen for shared URLs/text when the app is already running
@@ -168,6 +177,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _initUser() async {
+    userId = await UserManager.getOrCreateUserId();
+    setState(() {});
+    print("UserId: $userId");
+    // Now you can use the userId for fetching or uploading data to Firestore
+  }
+
   void _updateSelectedVoice(VoiceModel voice) {
     setState(() {
       _currentSelectedVoice = voice;
@@ -201,6 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print('Language Code: $languageCode');
     print('Voice Name: $voiceName');
     print('Speaking Rate: $speakingRate');
+    print('UserID: $userId'); // Confirming the userID is included
 
     var request = http.Request('POST', AppConfig.ttsUrl);
     request.headers.addAll({'Content-Type': 'application/json'});
@@ -209,7 +226,8 @@ class _MyHomePageState extends State<MyHomePage> {
       'filename': filename,
       'languageCode': languageCode, // Include language code
       'voiceName': voiceName, // Include voice name
-      'speakingRate': speakingRate
+      'speakingRate': speakingRate,
+      'userId': userId,
     });
 
     var streamedResponse =
@@ -217,7 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (streamedResponse.statusCode == 200) {
       print("Text sent successfully, starting status check.");
-      handleProcessing(filename); // Now, just start checking status
+      //handleProcessing(filename); // Now, just start checking status
     } else {
       print('Server responded with error: ${streamedResponse.statusCode}');
     }
@@ -265,6 +283,10 @@ class _MyHomePageState extends State<MyHomePage> {
         // Optionally, play the audio file after download
         //playAudioFromFile(localFilePath);
         streamAudioFromUrl(result['gcs_url']!);
+      } else if (result['status'] == 'deleted' ||
+          result['status'] == 'not_found') {
+        // File has been deleted or is not found, and it's intentional
+        timer.cancel(); // Consider logging this event or handling it as needed
       }
     });
   }
@@ -411,26 +433,10 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Clean with AI'),
             ),
             ElevatedButton(
-              onPressed: () async {
-                var url = Uri.parse(
-                    'http://10.0.2.2:5001/firebase-readme-123/us-central1/cleanText');
-
-                // Fixed string you want to send
-                String fixedString = "Tell me a kids joke";
-
-                var response = await http.post(
-                  url,
-                  headers: {"Content-Type": "application/json"},
-                  // Use the fixed string here
-                  body: jsonEncode({
-                    "text": fixedString
-                  }), // Sending JSON data with the fixed string
-                );
-
-                print('Response status: ${response.statusCode}');
-                print('Response body: ${response.body}');
+              onPressed: () {
+                FirebaseCrashlytics.instance.crash();
               },
-              child: Text('Call Cloud Function'),
+              child: Text('Test Crashlytics'),
             ),
             SizedBox(height: 20),
             if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
