@@ -211,34 +211,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return totalCost.toStringAsFixed(4); // Format to 2 decimal places
   }
 
-  // Function to call the Cloud Function
-  Future<void> callcheckTTS() async {
-    var url = Uri.parse(
-        'http://10.0.2.2:5001/firebase-readme-123/us-central1/checkTTS');
-
-    try {
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        setState(() {
-          _response = response.body;
-          print(_response);
-        });
-      } else {
-        setState(() {
-          _response = 'Error: ${response.reasonPhrase}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _response = 'Error calling cloud function: $e';
-      });
-    }
-  }
-
   void sendTextToServer() async {
     final text = textController.text;
     final fileId = '${IdManager.generateAudioId()}.wav';
-    //pollTTSStatus(fileId);
+    print("fileID: $fileId");
 
     // Modify this part to include selectedVoice's parameters
     final languageCode = _currentSelectedVoice?.languageCode ??
@@ -270,9 +246,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (streamedResponse.statusCode == 200) {
       print("Text sent successfully, starting status check.");
-      //pollTTSStatus(fileId); // Now, just start checking status
+      callcheckTTS(fileId); // Now, just start checking status
     } else {
       print('Server responded with error: ${streamedResponse.statusCode}');
+    }
+  }
+
+  // Function to call the Cloud Function
+  Future<void> callcheckTTS(String fileId) async {
+    var url = Uri.http('10.0.2.2:5001',
+        '/firebase-readme-123/us-central1/checkTTS', {'fileId': fileId});
+    print("url= $url");
+
+    try {
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() {
+          _response = response.body;
+          print(_response);
+        });
+      } else {
+        setState(() {
+          _response = 'Error: ${response.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _response = 'Error calling cloud function: $e';
+      });
     }
   }
 
@@ -424,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                callcheckTTS();
+                //callcheckTTS();
               },
               child: Text('Call checkTTS'),
             ),
