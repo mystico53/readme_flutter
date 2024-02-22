@@ -7,13 +7,14 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
-import 'app_config.dart'; // Import AppConfig
+import 'app_config.dart';
 import 'voice_model.dart';
-import 'user_manager.dart';
+import 'id_manager.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:uuid/uuid.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,14 @@ void main() async {
 
   // Set up Firebase Crashlytics error handling as the default error handler
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+
+  // Automatically switch between Firestore emulator and production
+  if (!AppConfig.isProduction) {
+    // For local development, connect to the Firestore emulator
+    // Use '10.0.2.2' for Android emulator and 'localhost' for iOS simulator or web
+    FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
+    FirebaseFunctions.instance.useFunctionsEmulator('10.0.2.2', 5001);
+  }
 
   runApp(MyApp());
 }
@@ -131,11 +140,12 @@ class _MyHomePageState extends State<MyHomePage> {
   late StreamSubscription _intentSub;
   final _sharedFiles = <SharedMediaFile>[];
   VoiceModel? _currentSelectedVoice;
+  String _response = 'No data';
 
   final textController = TextEditingController();
   final scrollController = ScrollController();
   String audioUrl = '';
-  Timer? _timer;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -178,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _initUser() async {
-    userId = await UserManager.getOrCreateUserId();
+    userId = await IdManager.getOrCreateUserId();
     setState(() {});
     print("UserId: $userId");
     // Now you can use the userId for fetching or uploading data to Firestore
@@ -201,9 +211,34 @@ class _MyHomePageState extends State<MyHomePage> {
     return totalCost.toStringAsFixed(4); // Format to 2 decimal places
   }
 
+  // Function to call the Cloud Function
+  Future<void> callcheckTTS() async {
+    var url = Uri.parse(
+        'http://10.0.2.2:5001/firebase-readme-123/us-central1/checkTTS');
+
+    try {
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() {
+          _response = response.body;
+          print(_response);
+        });
+      } else {
+        setState(() {
+          _response = 'Error: ${response.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _response = 'Error calling cloud function: $e';
+      });
+    }
+  }
+
   void sendTextToServer() async {
     final text = textController.text;
-    final filename = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
+    final fileId = '${IdManager.generateAudioId()}.wav';
+    //pollTTSStatus(fileId);
 
     // Modify this part to include selectedVoice's parameters
     final languageCode = _currentSelectedVoice?.languageCode ??
@@ -223,7 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
     request.headers.addAll({'Content-Type': 'application/json'});
     request.body = jsonEncode({
       'text': text,
-      'filename': filename,
+      'fileId': fileId,
       'languageCode': languageCode, // Include language code
       'voiceName': voiceName, // Include voice name
       'speakingRate': speakingRate,
@@ -235,7 +270,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (streamedResponse.statusCode == 200) {
       print("Text sent successfully, starting status check.");
-      //handleProcessing(filename); // Now, just start checking status
+      //pollTTSStatus(fileId); // Now, just start checking status
     } else {
       print('Server responded with error: ${streamedResponse.statusCode}');
     }
@@ -245,50 +280,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     textController.removeListener(_updateCharacterCount);
     textController.dispose();
+    _pollingTimer?.cancel();
     _intentSub.cancel();
     super.dispose();
-  }
-
-  Future<Map<String, String>> checkReadyStatus(String fileName) async {
-    try {
-      final url = AppConfig.checkAudioStatusUrl(fileName);
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print("checked status for $fileName and received $data");
-        return {
-          'status': data['status'],
-          'gcs_url': data['gcs_url'] ?? '',
-        };
-      } else {
-        print('Server error: ${response.statusCode} for $fileName');
-        return {'status': 'Server error', 'gcs_url': ''};
-      }
-    } catch (e) {
-      print('An error occurred: $e for $fileName');
-      return {'status': 'Error', 'gcs_url': ''};
-    }
-  }
-
-  void handleProcessing(String fileName) {
-    const period = Duration(seconds: 1);
-    _timer = Timer.periodic(period, (timer) async {
-      final result = await checkReadyStatus(fileName);
-      if (result['status'] == 'ready' && result['gcs_url']!.isNotEmpty) {
-        timer.cancel(); // Stop monitoring once the file is ready
-        print("lets play it");
-        String localFilePath = await prepareLocalFilePath(fileName);
-        //await downloadAudioFile(result['gcs_url']!, localFilePath);
-        // Optionally, play the audio file after download
-        //playAudioFromFile(localFilePath);
-        streamAudioFromUrl(result['gcs_url']!);
-      } else if (result['status'] == 'deleted' ||
-          result['status'] == 'not_found') {
-        // File has been deleted or is not found, and it's intentional
-        timer.cancel(); // Consider logging this event or handling it as needed
-      }
-    });
   }
 
   void cleanWithAI() async {
@@ -326,9 +320,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<String> prepareLocalFilePath(String filename) async {
+  Future<String> prepareLocalFilePath(String fileId) async {
     final directory = await getApplicationDocumentsDirectory();
-    return '${directory.path}/$filename';
+    return '${directory.path}/$fileId';
   }
 
   void streamAudioFromUrl(String url) async {
@@ -344,10 +338,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String convertGsUrlToHttps(String gsUrl) {
     // Implement conversion logic here, or return a directly accessible HTTPS URL
     return gsUrl.replaceFirst('gs://', 'https://storage.googleapis.com/');
-  }
-
-  void stopCheckingStatus() {
-    _timer?.cancel();
   }
 
   @override
@@ -434,9 +424,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                FirebaseCrashlytics.instance.crash();
+                callcheckTTS();
               },
-              child: Text('Test Crashlytics'),
+              child: Text('Call checkTTS'),
             ),
             SizedBox(height: 20),
             if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
