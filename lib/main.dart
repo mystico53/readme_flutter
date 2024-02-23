@@ -332,7 +332,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reading voice app'),
+        title: const Text('Lisme - listen to my text'),
       ),
       body: Center(
         child: Column(
@@ -410,17 +410,81 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: const Text('Clean with AI'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                //callcheckTTS();
-              },
-              child: Text('Call checkTTS'),
+            Expanded(
+              child: AudioFilesList(
+                onAudioSelected: (String url) {
+                  setState(() {
+                    audioUrl =
+                        url; // This will update the audioUrl in MyHomePageState and rebuild the widget.
+                  });
+                },
+              ),
             ),
             SizedBox(height: 20),
             if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
           ],
         ),
       ),
+    );
+  }
+}
+
+final CollectionReference audioFilesCollection =
+    FirebaseFirestore.instance.collection('audioFiles');
+
+class AudioFilesList extends StatelessWidget {
+  final Function(String) onAudioSelected;
+
+  AudioFilesList({required this.onAudioSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    CollectionReference audioFilesCollection =
+        FirebaseFirestore.instance.collection('audioFiles');
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: audioFilesCollection.snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return Text('Something went wrong');
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Text("Loading");
+        }
+
+        return ListView(
+          children: snapshot.data!.docs.map((DocumentSnapshot document) {
+            Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+            return ListTile(
+              title: Text(document.id), // Displaying the document ID
+              trailing: Row(
+                mainAxisSize: MainAxisSize
+                    .min, // This ensures the Row only takes as much space as needed
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.play_arrow),
+                    onPressed: () {
+                      onAudioSelected(data[
+                          'httpsUrl']); // Call the function to play the audio
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () async {
+                      // Perform the delete operation
+                      await FirebaseFirestore.instance
+                          .collection('audioFiles')
+                          .doc(document.id)
+                          .delete();
+                    },
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }
