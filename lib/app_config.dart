@@ -11,9 +11,6 @@ class AppConfig {
   }
 
   static Uri get ttsUrl => baseUrl.resolve('textToSpeech');
-  static Uri checkTTSStatusUrl(String fileId) =>
-      baseUrl.resolve('checkTTSStatus/$fileId');
-
-  // Update the function URL to match the new Cloud Function name
   static Uri get generateAiTextUrl => baseUrl.resolve('cleanText');
+  static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
 }

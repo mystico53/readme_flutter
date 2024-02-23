@@ -261,10 +261,17 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       var response = await http.get(url);
       if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
         setState(() {
-          _response = response.body;
-          print(_response);
+          _response = response.body; // Store the entire response
+          // send to audioplayer
+          audioUrl = responseData[
+              'gcsUri']; // Store just the gcsUri part in the audioUrl state variable
         });
+        print(_response);
+
+        // Pass the gcsUri to streamAudioFromUrl
+        //streamAudioFromUrl(responseData['gcsUri']);
       } else {
         setState(() {
           _response = 'Error: ${response.reasonPhrase}';
@@ -319,26 +326,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Failed to generate AI text');
       return text; // Return the original text or handle accordingly
     }
-  }
-
-  Future<String> prepareLocalFilePath(String fileId) async {
-    final directory = await getApplicationDocumentsDirectory();
-    return '${directory.path}/$fileId';
-  }
-
-  void streamAudioFromUrl(String url) async {
-    //final player = AudioPlayer();
-    // Convert or ensure the URL is in the correct format
-    final httpsUrl = convertGsUrlToHttps(url);
-    setState(() {
-      audioUrl = httpsUrl;
-    });
-    //await player.play(UrlSource(httpsUrl));
-  }
-
-  String convertGsUrlToHttps(String gsUrl) {
-    // Implement conversion logic here, or return a directly accessible HTTPS URL
-    return gsUrl.replaceFirst('gs://', 'https://storage.googleapis.com/');
   }
 
   @override
