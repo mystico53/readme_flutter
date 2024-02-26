@@ -246,6 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (streamedResponse.statusCode == 200) {
       print("Text sent successfully, starting status check.");
+      print("generated fileID: $fileId");
       callcheckTTS(fileId); // Now, just start checking status
     } else {
       print('Server responded with error: ${streamedResponse.statusCode}');
@@ -254,8 +255,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Function to call the Cloud Function
   Future<void> callcheckTTS(String fileId) async {
-    var url = Uri.http('10.0.2.2:5001',
-        '/firebase-readme-123/us-central1/checkTTS', {'fileId': fileId});
+    print("fileId: $fileId");
+    var url = AppConfig.checkTTSUrl(fileId);
     print("url= $url");
 
     try {

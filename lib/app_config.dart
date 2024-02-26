@@ -1,6 +1,6 @@
 class AppConfig {
-  static const bool isProduction = false; // Local
-  //static const bool isProduction = true; // Prod
+  //static const bool isProduction = false; // Local
+  static const bool isProduction = true; // Prod
 
   static Uri get baseUrl {
     return isProduction
@@ -12,5 +12,11 @@ class AppConfig {
 
   static Uri get ttsUrl => baseUrl.resolve('textToSpeech');
   static Uri get generateAiTextUrl => baseUrl.resolve('cleanText');
-  static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
+  //static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
+  static Uri checkTTSUrl(String fileId) {
+    // Construct the base URL for the checkTTS endpoint
+    Uri endpoint = baseUrl.resolve('checkTTS');
+    // Return the URL with fileId as a query parameter
+    return Uri.parse('$endpoint').replace(queryParameters: {'fileId': fileId});
+  }
 }
