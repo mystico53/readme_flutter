@@ -14,6 +14,7 @@ import '../widgets/audio_files_list.dart';
 import '../widgets/audio_player_widget.dart';
 import '../widgets/voice_selection_widget.dart';
 import '../providers/button_state.dart';
+import '../services/clean_text.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -170,55 +171,6 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  void cleanWithAI() async {
-    print("Disabling button");
-    Provider.of<ButtonState>(context, listen: false).disableButton();
-    String text = textController.text;
-
-    try {
-      String cleanedText = await sendTextToAI(text);
-      if (mounted) {
-        setState(() {
-          textController.text = cleanedText;
-        });
-        print("Enabling button");
-        Provider.of<ButtonState>(context, listen: false).enableButton();
-      }
-    } catch (e) {
-      print("Error during text cleaning: $e");
-      if (mounted) {
-        Provider.of<ButtonState>(context, listen: false).enableButton();
-      }
-    }
-  }
-
-  Future<String> sendTextToAI(String text) async {
-    final response = await http.post(
-      AppConfig.generateAiTextUrl,
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'text': text,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      // Assuming the response is a JSON object with a key 'generated_text'
-      final jsonResponse = jsonDecode(response.body);
-      String generatedText = jsonResponse['generated_text'];
-
-      // Replace '\n' with spaces
-      generatedText = generatedText.replaceAll('\n', ' ');
-
-      return generatedText;
-    } else {
-      // Handle error response
-      print('Failed to generate AI text');
-      return text; // Return the original text or handle accordingly
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -298,7 +250,31 @@ class _MainScreenState extends State<MainScreen> {
             // Using Consumer to rebuild the button based on ButtonState
             Consumer<ButtonState>(
               builder: (context, buttonState, child) => ElevatedButton(
-                onPressed: buttonState.isEnabled ? () => cleanWithAI() : null,
+                onPressed: buttonState.isEnabled
+                    ? () async {
+                        // Disable the button
+                        buttonState.disableButton();
+
+                        // Perform the cleaning operation
+                        String cleanedText;
+                        try {
+                          cleanedText = await CleanTextService.cleanText(
+                              textController.text);
+                        } catch (e) {
+                          print("Error during text cleaning: $e");
+                          cleanedText = textController
+                              .text; // Fallback to original text on error
+                        }
+
+                        // Update the text controller and re-enable the button in the UI thread
+                        if (mounted) {
+                          setState(() {
+                            textController.text = cleanedText;
+                          });
+                          buttonState.enableButton();
+                        }
+                      }
+                    : null,
                 child: const Text('Clean with AI'),
               ),
             ),
