@@ -1,6 +1,6 @@
 class AppConfig {
-  //static const bool isProduction = false; // Local
-  static const bool isProduction = true; // Prod
+  static const bool isProduction = false; // Local
+  //static const bool isProduction = true; // Prod
 
   static Uri get baseUrl {
     return isProduction
