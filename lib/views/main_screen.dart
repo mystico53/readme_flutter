@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:http/http.dart' as http;
 
@@ -12,6 +13,7 @@ import '../utils/id_manager.dart';
 import '../widgets/audio_files_list.dart';
 import '../widgets/audio_player_widget.dart';
 import '../widgets/voice_selection_widget.dart';
+import '../providers/button_state.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -169,11 +171,25 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void cleanWithAI() async {
+    print("Disabling button");
+    Provider.of<ButtonState>(context, listen: false).disableButton();
     String text = textController.text;
-    String cleanedText = await sendTextToAI(text);
-    setState(() {
-      textController.text = cleanedText;
-    });
+
+    try {
+      String cleanedText = await sendTextToAI(text);
+      if (mounted) {
+        setState(() {
+          textController.text = cleanedText;
+        });
+        print("Enabling button");
+        Provider.of<ButtonState>(context, listen: false).enableButton();
+      }
+    } catch (e) {
+      print("Error during text cleaning: $e");
+      if (mounted) {
+        Provider.of<ButtonState>(context, listen: false).enableButton();
+      }
+    }
   }
 
   Future<String> sendTextToAI(String text) async {
@@ -279,11 +295,12 @@ class _MainScreenState extends State<MainScreen> {
             ),
             VoiceSelectionWidget(onSelectedVoiceChanged: _updateSelectedVoice),
             const SizedBox(width: 10), // Spacing between buttons
-            ElevatedButton(
-              onPressed: () {
-                cleanWithAI();
-              },
-              child: const Text('Clean with AI'),
+            // Using Consumer to rebuild the button based on ButtonState
+            Consumer<ButtonState>(
+              builder: (context, buttonState, child) => ElevatedButton(
+                onPressed: buttonState.isEnabled ? () => cleanWithAI() : null,
+                child: const Text('Clean with AI'),
+              ),
             ),
             Expanded(
               child: AudioFilesList(
