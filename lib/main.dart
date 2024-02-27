@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'services/firebase_init.dart';
+import 'view_models/text_cleaner_viewmodel.dart';
 import 'views/main_screen.dart';
 import 'package:provider/provider.dart';
-import 'providers/button_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,7 +10,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ButtonState()),
+        ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         // Add other providers here
       ],
       child: MyApp(),

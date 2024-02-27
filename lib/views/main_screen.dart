@@ -10,11 +10,10 @@ import 'package:http/http.dart' as http;
 import '../models/voice_model.dart';
 import '../utils/app_config.dart';
 import '../utils/id_manager.dart';
+import '../view_models/text_cleaner_viewmodel.dart';
 import '../widgets/audio_files_list.dart';
 import '../widgets/audio_player_widget.dart';
 import '../widgets/voice_selection_widget.dart';
-import '../providers/button_state.dart';
-import '../services/clean_text.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -248,31 +247,13 @@ class _MainScreenState extends State<MainScreen> {
             VoiceSelectionWidget(onSelectedVoiceChanged: _updateSelectedVoice),
             const SizedBox(width: 10), // Spacing between buttons
             // Using Consumer to rebuild the button based on ButtonState
-            Consumer<ButtonState>(
-              builder: (context, buttonState, child) => ElevatedButton(
-                onPressed: buttonState.isEnabled
+            Consumer<TextCleanerViewModel>(
+              builder: (context, viewModel, child) => ElevatedButton(
+                onPressed: viewModel.isCleanButtonEnabled
                     ? () async {
-                        // Disable the button
-                        buttonState.disableButton();
-
-                        // Perform the cleaning operation
-                        String cleanedText;
-                        try {
-                          cleanedText = await CleanTextService.cleanText(
-                              textController.text);
-                        } catch (e) {
-                          print("Error during text cleaning: $e");
-                          cleanedText = textController
-                              .text; // Fallback to original text on error
-                        }
-
-                        // Update the text controller and re-enable the button in the UI thread
-                        if (mounted) {
-                          setState(() {
-                            textController.text = cleanedText;
-                          });
-                          buttonState.enableButton();
-                        }
+                        // Directly call the cleanText method from your ViewModel
+                        await viewModel.cleanText(
+                            textController.text, textController);
                       }
                     : null,
                 child: const Text('Clean with AI'),
