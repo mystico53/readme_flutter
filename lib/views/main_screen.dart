@@ -11,6 +11,7 @@ import '../view_models/text_to_googleTTS_viewmodel.dart';
 import '../widgets/audio_files_list.dart';
 import '../widgets/audio_player_widget.dart';
 import '../widgets/voice_selection_widget.dart';
+import '../views/generate_dialog.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -180,6 +181,7 @@ class MainScreenState extends State<MainScreen> {
                 child: const Text('Clean with AI'),
               ),
             ),
+
             Expanded(
               child: AudioFilesList(
                 onAudioSelected: (String url) {
@@ -190,6 +192,19 @@ class MainScreenState extends State<MainScreen> {
                 },
               ),
             ),
+
+            FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return const GenerateDialog();
+                  },
+                );
+              },
+              child: const Icon(Icons.add_box_sharp),
+            ),
+
             const SizedBox(height: 20),
             if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
           ],
