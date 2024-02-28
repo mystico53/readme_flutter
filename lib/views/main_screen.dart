@@ -11,6 +11,7 @@ import '../models/voice_model.dart';
 import '../utils/app_config.dart';
 import '../utils/id_manager.dart';
 import '../view_models/text_cleaner_viewmodel.dart';
+import '../view_models/text_to_googleTTS_viewmodel.dart';
 import '../widgets/audio_files_list.dart';
 import '../widgets/audio_player_widget.dart';
 import '../widgets/voice_selection_widget.dart';
@@ -95,72 +96,6 @@ class _MainScreenState extends State<MainScreen> {
     return totalCost.toStringAsFixed(4); // Format to 2 decimal places
   }
 
-  void sendTextToServer() async {
-    final text = textController.text;
-    final fileId = '${IdManager.generateAudioId()}.wav';
-    print("fileID: $fileId");
-
-    // Modify this part to include selectedVoice's parameters
-    final languageCode = _currentSelectedVoice?.languageCode ??
-        'en-US'; // Default to 'en-US' if null
-    final voiceName = _currentSelectedVoice?.voiceName ??
-        'en-US-Neural2-J'; // Default voice if null
-    final speakingRate =
-        _currentSelectedVoice?.speakingRate ?? 1.0; // Default voice if null
-
-    var request = http.Request('POST', AppConfig.ttsUrl);
-    request.headers.addAll({'Content-Type': 'application/json'});
-    request.body = jsonEncode({
-      'text': text,
-      'fileId': fileId,
-      'languageCode': languageCode, // Include language code
-      'voiceName': voiceName, // Include voice name
-      'speakingRate': speakingRate,
-      'userId': userId,
-    });
-
-    var streamedResponse =
-        await request.send().timeout(const Duration(seconds: 30));
-
-    if (streamedResponse.statusCode == 200) {
-      print("Text sent successfully, starting status check.");
-      callcheckTTS(fileId); // Now, just start checking status
-    } else {
-      print('Server responded with error: ${streamedResponse.statusCode}');
-    }
-  }
-
-  // Function to call the Cloud Function
-  Future<void> callcheckTTS(String fileId) async {
-    var url = AppConfig.checkTTSUrl(fileId);
-    print("url= $url");
-
-    try {
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        setState(() {
-          _response = response.body; // Store the entire response
-          // send to audioplayer
-          audioUrl = responseData[
-              'gcsUri']; // Store just the gcsUri part in the audioUrl state variable
-        });
-        print(_response);
-
-        // Pass the gcsUri to streamAudioFromUrl
-        //streamAudioFromUrl(responseData['gcsUri']);
-      } else {
-        setState(() {
-          _response = 'Error: ${response.reasonPhrase}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _response = 'Error calling cloud function: $e';
-      });
-    }
-  }
-
   @override
   void dispose() {
     textController.removeListener(_updateCharacterCount);
@@ -235,11 +170,19 @@ class _MainScreenState extends State<MainScreen> {
                     child: const Text('Clear Text'),
                   ),
                   const SizedBox(width: 10), // Spacing between buttons
-                  ElevatedButton(
-                    onPressed: () {
-                      sendTextToServer();
-                    },
-                    child: const Text('Generate Audio'),
+                  Consumer<TextToGoogleTTSViewModel>(
+                    builder: (context, viewModel, child) => ElevatedButton(
+                      onPressed: viewModel.isGenerateButtonEnabled
+                          ? () async {
+                              // Assuming you have `textController`, `userId`, and `selectedVoice` available
+                              await viewModel.generateAndCheckAudio(
+                                  textController.text,
+                                  userId,
+                                  _currentSelectedVoice);
+                            }
+                          : null,
+                      child: const Text('Generate Audio'),
+                    ),
                   ),
                 ],
               ),

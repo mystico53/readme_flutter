@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/firebase_init.dart';
 import 'view_models/text_cleaner_viewmodel.dart';
+import 'view_models/text_to_googleTTS_viewmodel.dart';
 import 'views/main_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +12,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
+        ChangeNotifierProvider(create: (context) => TextToGoogleTTSViewModel()),
         // Add other providers here
       ],
       child: MyApp(),
