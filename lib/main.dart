@@ -4,6 +4,7 @@ import 'view_models/intent_viewmodel.dart';
 import 'services/firebase_init.dart';
 import 'view_models/text_cleaner_viewmodel.dart';
 import 'view_models/text_to_googleTTS_viewmodel.dart';
+import 'view_models/user_id_viewmodel.dart';
 import 'views/main_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => TextToGoogleTTSViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (context) => GenerateDialogViewModel()),
+        ChangeNotifierProvider(create: (_) => UserIdViewModel()),
         // Add other providers here
       ],
       child: MyApp(),
@@ -27,7 +29,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: MainScreen(),
     );
   }
