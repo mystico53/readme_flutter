@@ -1,14 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import 'package:http/http.dart' as http;
-
+import '../view_models/intent_viewmodel.dart';
 import '../models/voice_model.dart';
-import '../utils/app_config.dart';
 import '../utils/id_manager.dart';
 import '../view_models/text_cleaner_viewmodel.dart';
 import '../view_models/text_to_googleTTS_viewmodel.dart';
@@ -23,60 +18,38 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   String userId = '';
-  late StreamSubscription _intentSub;
-  final _sharedFiles = <SharedMediaFile>[];
   VoiceModel? _currentSelectedVoice;
-  String _response = 'No data';
-
   final textController = TextEditingController();
   final scrollController = ScrollController();
   String audioUrl = '';
-  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _initUser();
+    final intentViewModel =
+        Provider.of<IntentViewModel>(context, listen: false);
+    // Listen for changes in the ViewModel
+    intentViewModel.addListener(() {
+      // This ensures we're not calling setState during the build phase.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            textController.text =
+                intentViewModel.sharedFiles.map((file) => file.path).join(", ");
+          });
+        }
+      });
+    });
+    intentViewModel.loadInitialSharedFiles();
+    intentViewModel.startListeningForIntents();
     textController.addListener(_updateCharacterCount);
-
-    // Listen for shared URLs/text when the app is already running
-    _intentSub = ReceiveSharingIntent.getMediaStream().listen((value) {
-      setState(() {
-        _sharedFiles.clear();
-        _sharedFiles.addAll(value);
-        String filesString =
-            _sharedFiles.map((f) => f.toMap().toString()).join(", ");
-        textController.text = filesString;
-        Future.delayed(Duration(milliseconds: 100), () {
-          scrollController.animateTo(
-            scrollController.position.maxScrollExtent,
-            duration: Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          );
-        });
-      });
-    }, onError: (err) {
-      print("getIntentDataStream error: $err");
-    });
-    ReceiveSharingIntent.getInitialMedia().then((value) {
-      setState(() {
-        _sharedFiles.clear();
-        _sharedFiles.addAll(value);
-        String filesString =
-            _sharedFiles.map((f) => f.toMap().toString()).join(", ");
-        textController.text = filesString;
-
-        // Tell the library that we are done processing the intent.
-        ReceiveSharingIntent.reset();
-      });
-    });
   }
 
   void _initUser() async {
     userId = await IdManager.getOrCreateUserId();
     setState(() {});
     print("UserId: $userId");
-    // Now you can use the userId for fetching or uploading data to Firestore
   }
 
   void _updateSelectedVoice(VoiceModel voice) {
@@ -100,8 +73,6 @@ class _MainScreenState extends State<MainScreen> {
   void dispose() {
     textController.removeListener(_updateCharacterCount);
     textController.dispose();
-    _pollingTimer?.cancel();
-    _intentSub.cancel();
     super.dispose();
   }
 

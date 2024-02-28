@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'view_models/intent_viewmodel.dart';
 import 'services/firebase_init.dart';
 import 'view_models/text_cleaner_viewmodel.dart';
 import 'view_models/text_to_googleTTS_viewmodel.dart';
@@ -13,6 +14,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         ChangeNotifierProvider(create: (context) => TextToGoogleTTSViewModel()),
+        ChangeNotifierProvider(create: (context) => IntentViewModel()),
         // Add other providers here
       ],
       child: MyApp(),
