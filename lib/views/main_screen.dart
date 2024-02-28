@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:readme_app/view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
 import '../models/voice_model.dart';
 import '../utils/id_manager.dart';
@@ -12,11 +13,13 @@ import '../widgets/audio_player_widget.dart';
 import '../widgets/voice_selection_widget.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  MainScreenState createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class MainScreenState extends State<MainScreen> {
   String userId = '';
   VoiceModel? _currentSelectedVoice;
   final textController = TextEditingController();
@@ -30,6 +33,13 @@ class _MainScreenState extends State<MainScreen> {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     // Listen for changes in the ViewModel
+    textController.addListener(() {
+      // Get the current text length
+      int currentTextLength = textController.text.length;
+      // Update the ViewModel
+      Provider.of<GenerateDialogViewModel>(context, listen: false)
+          .updateCharacterCount(currentTextLength);
+    });
     intentViewModel.addListener(() {
       // This ensures we're not calling setState during the build phase.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -43,7 +53,6 @@ class _MainScreenState extends State<MainScreen> {
     });
     intentViewModel.loadInitialSharedFiles();
     intentViewModel.startListeningForIntents();
-    textController.addListener(_updateCharacterCount);
   }
 
   void _initUser() async {
@@ -52,26 +61,8 @@ class _MainScreenState extends State<MainScreen> {
     print("UserId: $userId");
   }
 
-  void _updateSelectedVoice(VoiceModel voice) {
-    setState(() {
-      _currentSelectedVoice = voice;
-    });
-  }
-
-  void _updateCharacterCount() {
-    setState(() {}); // Update UI whenever text changes
-  }
-
-  String _calculateEstimatedCost() {
-    double costPerCharacter = 0.000016;
-    int characterCount = textController.text.length;
-    double totalCost = characterCount * costPerCharacter;
-    return totalCost.toStringAsFixed(4); // Format to 2 decimal places
-  }
-
   @override
   void dispose() {
-    textController.removeListener(_updateCharacterCount);
     textController.dispose();
     super.dispose();
   }
@@ -96,12 +87,20 @@ class _MainScreenState extends State<MainScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text('Character Count: ${textController.text.length}'),
+              child: Consumer<GenerateDialogViewModel>(
+                builder: (context, viewModel, child) {
+                  return Text('Character Count: ${viewModel.characterCount}');
+                },
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                  'Estimated Costs: \$${_calculateEstimatedCost()}'), // Display estimated cost
+              child: Consumer<GenerateDialogViewModel>(
+                builder: (context, viewModel, child) {
+                  return Text(
+                      'Estimated Costs: \$${viewModel.calculateEstimatedCost()}');
+                },
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -122,10 +121,10 @@ class _MainScreenState extends State<MainScreen> {
                             TextPosition(offset: newText.length));
 
                         // Scroll to the bottom of the TextField
-                        Future.delayed(Duration(milliseconds: 100), () {
+                        Future.delayed(const Duration(milliseconds: 100), () {
                           scrollController.animateTo(
                             scrollController.position.maxScrollExtent,
-                            duration: Duration(milliseconds: 200),
+                            duration: const Duration(milliseconds: 200),
                             curve: Curves.easeOut,
                           );
                         });
@@ -158,7 +157,15 @@ class _MainScreenState extends State<MainScreen> {
                 ],
               ),
             ),
-            VoiceSelectionWidget(onSelectedVoiceChanged: _updateSelectedVoice),
+
+            VoiceSelectionWidget(
+              onSelectedVoiceChanged: (VoiceModel voice) {
+                // Use Provider to access the ViewModel and call updateSelectedVoice
+                Provider.of<GenerateDialogViewModel>(context, listen: false)
+                    .updateSelectedVoice(voice);
+              },
+            ),
+
             const SizedBox(width: 10), // Spacing between buttons
             // Using Consumer to rebuild the button based on ButtonState
             Consumer<TextCleanerViewModel>(
@@ -183,7 +190,7 @@ class _MainScreenState extends State<MainScreen> {
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             if (audioUrl.isNotEmpty) AudioPlayerWidget(audioUrl: audioUrl),
           ],
         ),
