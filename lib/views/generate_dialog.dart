@@ -122,14 +122,14 @@ class GenerateDialogState extends State<GenerateDialog> {
                         });
                       });
                     },
-                    child: const Text('Paste Text'),
+                    child: const Icon(Icons.paste),
                   ),
                   const SizedBox(width: 10), // Spacing between buttons
                   OutlinedButton(
                     onPressed: () {
                       textController.clear();
                     },
-                    child: const Text('Clear Text'),
+                    child: const Icon(Icons.clear),
                   ),
                   const SizedBox(width: 10), // Spacing between buttons
                   Consumer<TextToGoogleTTSViewModel>(
