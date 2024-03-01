@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../view_models/generate_dialog_viewmodel.dart';
+import '../view_models/intent_viewmodel.dart';
 import '../view_models/user_id_viewmodel.dart';
 import '../views/generate_dialog.dart';
 import '../widgets/audio_files_list.dart';
-import '../view_models/text_to_googleTTS_viewmodel.dart';
+
 import '../widgets/audio_player_widget.dart';
 
 class MainScreen extends StatefulWidget {
@@ -15,11 +17,30 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   String userId = '';
+  String sharedContent = "";
 
   @override
   void initState() {
     super.initState();
-    Provider.of<UserIdViewModel>(context, listen: false).initUserId();
+    Future.microtask(() => _initializeIntentHandling());
+  }
+
+  void _initializeIntentHandling() {
+    final intentViewModel =
+        Provider.of<IntentViewModel>(context, listen: false);
+    intentViewModel.loadInitialSharedFiles();
+    intentViewModel.startListeningForIntents();
+    print("Attempting to open GenerateDialog...");
+    _openGenerateDialog();
+  }
+
+  void _openGenerateDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return const GenerateDialog(); // Assuming GenerateDialog has a parameterless constructor
+      },
+    );
   }
 
   @override
@@ -29,24 +50,39 @@ class MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final TTSviewModel = Provider.of<TextToGoogleTTSViewModel>(context);
+    final generateDialogViewModel =
+        Provider.of<GenerateDialogViewModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lisme - listen to my text'),
       ),
       body: Column(
-        // Use Column (or another layout widget) here
         children: <Widget>[
           Expanded(
-            child: AudioFilesList(
-              onAudioSelected: (String url) {
-                // Implement your logic here
+            // Replace AudioFilesList with a list of operations
+            child: Consumer<GenerateDialogViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.operations.isEmpty) {
+                  return Center(child: Text("No operations started"));
+                }
+                return ListView.builder(
+                  itemCount: viewModel.operations.length,
+                  itemBuilder: (context, index) {
+                    final operation = viewModel.operations[index];
+                    return ListTile(
+                      title: Text("Operation: ${operation.fileId}"),
+                      subtitle: Text("Status: ${operation.status}"),
+                    );
+                  },
+                );
               },
             ),
           ),
           const SizedBox(height: 20),
-          TTSviewModel.audioUrl != null && TTSviewModel.audioUrl!.isNotEmpty
-              ? AudioPlayerWidget(audioUrl: TTSviewModel.audioUrl!)
+          // Conditionally display the AudioPlayerWidget if there's a URL
+          generateDialogViewModel.audioUrl != null &&
+                  generateDialogViewModel.audioUrl!.isNotEmpty
+              ? AudioPlayerWidget(audioUrl: generateDialogViewModel.audioUrl!)
               : Container(), // Show an empty container if there's no URL
         ],
       ),

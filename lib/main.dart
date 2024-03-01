@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'services/intent_service.dart';
 import 'view_models/generate_dialog_viewmodel.dart';
 import 'view_models/intent_viewmodel.dart';
 import 'services/firebase_init.dart';
 import 'view_models/text_cleaner_viewmodel.dart';
-import 'view_models/text_to_googleTTS_viewmodel.dart';
 import 'view_models/user_id_viewmodel.dart';
 import 'views/main_screen.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +14,13 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<IntentService>(
+          create: (_) => IntentService(),
+        ),
+        ChangeNotifierProvider<IntentViewModel>(
+          create: (context) => IntentViewModel(),
+        ),
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
-        ChangeNotifierProvider(create: (context) => TextToGoogleTTSViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (context) => GenerateDialogViewModel()),
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),

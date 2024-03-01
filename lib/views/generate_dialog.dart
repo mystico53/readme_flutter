@@ -5,9 +5,6 @@ import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
-
-import '../view_models/text_cleaner_viewmodel.dart';
-import '../view_models/text_to_googleTTS_viewmodel.dart';
 import '../view_models/user_id_viewmodel.dart';
 import '../widgets/voice_selection_widget.dart';
 
@@ -132,15 +129,18 @@ class GenerateDialogState extends State<GenerateDialog> {
                     child: const Icon(Icons.clear),
                   ),
                   const SizedBox(width: 10), // Spacing between buttons
-                  Consumer<TextToGoogleTTSViewModel>(
+                  Consumer<GenerateDialogViewModel>(
                     builder: (context, viewModel, child) => ElevatedButton(
                       onPressed: viewModel.isGenerateButtonEnabled
                           ? () async {
-                              // Assuming you have `textController`, `userId`, and `selectedVoice` available
+                              // Debug message before attempting to generate audio
+                              // Here, ensure that the viewModel's currentSelectedVoice is passed, not _currentSelectedVoice if it's different
                               await viewModel.generateAndCheckAudio(
                                   textController.text,
-                                  userId,
-                                  _currentSelectedVoice);
+                                  viewModel
+                                      .userId, // Assuming userId is correctly set in viewModel
+                                  viewModel
+                                      .currentSelectedVoice); // Use the viewModel's selectedVoice
                             }
                           : null,
                       child: const Text('Generate Audio'),
@@ -153,6 +153,7 @@ class GenerateDialogState extends State<GenerateDialog> {
             VoiceSelectionWidget(
               onSelectedVoiceChanged: (VoiceModel voice) {
                 // Use Provider to access the ViewModel and call updateSelectedVoice
+                print("Updating selected voice to: ${voice.name}");
                 Provider.of<GenerateDialogViewModel>(context, listen: false)
                     .updateSelectedVoice(voice);
               },
@@ -160,18 +161,19 @@ class GenerateDialogState extends State<GenerateDialog> {
 
             const SizedBox(width: 10), // Spacing between buttons
             // Using Consumer to rebuild the button based on ButtonState
-            Consumer<TextCleanerViewModel>(
-              builder: (context, viewModel, child) => ElevatedButton(
-                onPressed: viewModel.isCleanButtonEnabled
-                    ? () async {
-                        // Directly call the cleanText method from your ViewModel
-                        await viewModel.cleanText(
-                            textController.text, textController);
-                      }
-                    : null,
-                child: const Text('Clean with AI'),
-              ),
-            ),
+            SwitchListTile(
+              title: Text("Clean with AI"),
+              value: Provider.of<GenerateDialogViewModel>(context)
+                  .isCleanAIToggled,
+              onChanged: Provider.of<GenerateDialogViewModel>(context)
+                      .isGenerateButtonEnabled
+                  ? (bool value) {
+                      Provider.of<GenerateDialogViewModel>(context,
+                              listen: false)
+                          .toggleCleanAI(value);
+                    }
+                  : null, // Disables interaction with the switch during operation
+            )
           ],
         ),
       ),

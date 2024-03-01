@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../utils/app_config.dart';
-import '../utils/id_manager.dart'; // Assuming you have this for ID generation
+//import '../utils/id_manager.dart'; // Assuming you have this for ID generation
 import '../models/voice_model.dart';
 
 class TextToGoogleTTS {
-  static Future<Map<String, dynamic>> sendTextToServer(
-      String text, String userId, VoiceModel? selectedVoice) async {
-    final fileId = '${IdManager.generateAudioId()}.wav';
-    print("Debug: Generated fileId: $fileId");
+  static Future<Map<String, dynamic>> sendTextToServer(String text,
+      String userId, VoiceModel? selectedVoice, String fileId) async {
+    //final fileId = '${IdManager.generateAudioId()}.wav';
+    //print("Debug: Generated fileId: $fileId");
 
     final languageCode = selectedVoice?.languageCode ?? 'en-US';
     final voiceName = selectedVoice?.voiceName ?? 'en-US-Neural2-J';
