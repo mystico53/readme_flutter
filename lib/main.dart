@@ -17,9 +17,6 @@ void main() async {
         Provider<IntentService>(
           create: (_) => IntentService(),
         ),
-        ChangeNotifierProvider<IntentViewModel>(
-          create: (context) => IntentViewModel(),
-        ),
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (context) => GenerateDialogViewModel()),
@@ -31,11 +28,31 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  MyAppState createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => _initializeIntentHandling());
+  }
+
+  void _initializeIntentHandling() {
+    final intentViewModel =
+        Provider.of<IntentViewModel>(context, listen: false);
+    intentViewModel.loadInitialSharedFiles();
+    intentViewModel.startListeningForIntents();
+  }
+
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MainScreen(),
+      home: MainScreen(), // Assuming MainScreen is the entry screen of your app
     );
   }
 }

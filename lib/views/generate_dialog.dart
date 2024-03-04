@@ -25,16 +25,10 @@ class GenerateDialogState extends State<GenerateDialog> {
   @override
   void initState() {
     super.initState();
+
+    // Accessing IntentViewModel from the dialog's build context
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
-    // Listen for changes in the ViewModel
-    textController.addListener(() {
-      // Get the current text length
-      int currentTextLength = textController.text.length;
-      // Update the ViewModel
-      Provider.of<GenerateDialogViewModel>(context, listen: false)
-          .updateCharacterCount(currentTextLength);
-    });
     intentViewModel.addListener(() {
       // This ensures we're not calling setState during the build phase.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -46,8 +40,26 @@ class GenerateDialogState extends State<GenerateDialog> {
         }
       });
     });
-    intentViewModel.loadInitialSharedFiles();
-    intentViewModel.startListeningForIntents();
+
+    // Immediately check if there are any shared files
+    if (intentViewModel.sharedFiles.isNotEmpty) {
+      // If there are shared files, update the dialog's state accordingly
+      print("Shared files are available.");
+      // For example, you might want to prepopulate some UI elements with this data
+      // This is just an example, replace it with your actual logic
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            // Assuming you have a TextEditingController for displaying the file paths
+            textController.text =
+                intentViewModel.sharedFiles.map((file) => file.path).join(", ");
+          });
+        }
+      });
+    } else {
+      print("No shared files are available.");
+      // Handle the case where no shared files are available
+    }
   }
 
   @override

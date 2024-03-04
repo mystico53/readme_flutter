@@ -58,6 +58,7 @@ class IntentViewModel with ChangeNotifier {
 
   void resetIntent() {
     _intentService.resetIntent();
+    print("Resetting intent service");
   }
 
   @override

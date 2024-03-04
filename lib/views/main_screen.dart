@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
-import '../view_models/user_id_viewmodel.dart';
 import '../views/generate_dialog.dart';
-import '../widgets/audio_files_list.dart';
-
 import '../widgets/audio_player_widget.dart';
 
 class MainScreen extends StatefulWidget {
@@ -22,25 +19,23 @@ class MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _initializeIntentHandling());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkForSharedFiles();
+    });
   }
 
-  void _initializeIntentHandling() {
+  void checkForSharedFiles() {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
-    intentViewModel.loadInitialSharedFiles();
-    intentViewModel.startListeningForIntents();
-    print("Attempting to open GenerateDialog...");
-    _openGenerateDialog();
-  }
-
-  void _openGenerateDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return const GenerateDialog(); // Assuming GenerateDialog has a parameterless constructor
-      },
-    );
+    if (intentViewModel.sharedFiles.isNotEmpty) {
+      print("Shared files are available in MainScreen.");
+      // Perform actions based on available shared files
+      // For example, navigate to GenerateDialog or update UI accordingly
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => GenerateDialog()),
+      );
+    }
   }
 
   @override
