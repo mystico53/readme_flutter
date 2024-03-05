@@ -151,8 +151,6 @@ class GenerateDialogState extends State<GenerateDialog> {
                     builder: (context, viewModel, child) => ElevatedButton(
                       onPressed: viewModel.isGenerateButtonEnabled
                           ? () async {
-                              // Debug message before attempting to generate audio
-                              // Here, ensure that the viewModel's currentSelectedVoice is passed, not _currentSelectedVoice if it's different
                               await viewModel.generateAndCheckAudio(
                                   textController.text,
                                   viewModel
