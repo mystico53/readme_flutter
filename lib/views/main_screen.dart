@@ -15,31 +15,52 @@ class MainScreen extends StatefulWidget {
 class MainScreenState extends State<MainScreen> {
   String userId = '';
   String sharedContent = "";
+  bool isDialogOpen = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkForSharedFiles();
-    });
+    final intentViewModel =
+        Provider.of<IntentViewModel>(context, listen: false);
+    intentViewModel.addListener(_handleIntentViewModelChange);
   }
 
   void checkForSharedFiles() {
+    print("checkForSharedFiles started");
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     if (intentViewModel.sharedFiles.isNotEmpty) {
       print("Shared files are available in MainScreen.");
-      // Perform actions based on available shared files
-      // For example, navigate to GenerateDialog or update UI accordingly
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => GenerateDialog()),
-      );
+      if (isDialogOpen) {
+        // Close the current dialog
+        Navigator.pop(context);
+      }
+      // Open the GenerateDialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          isDialogOpen = true;
+          return const GenerateDialog();
+        },
+      ).then((_) {
+        isDialogOpen = false;
+      });
+    }
+  }
+
+  void _handleIntentViewModelChange() {
+    final intentViewModel =
+        Provider.of<IntentViewModel>(context, listen: false);
+    if (intentViewModel.sharedFiles.isNotEmpty) {
+      checkForSharedFiles();
     }
   }
 
   @override
   void dispose() {
+    final intentViewModel =
+        Provider.of<IntentViewModel>(context, listen: false);
+    intentViewModel.removeListener(_handleIntentViewModelChange);
     super.dispose();
   }
 
@@ -83,12 +104,20 @@ class MainScreenState extends State<MainScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          if (isDialogOpen) {
+            // Close the current dialog
+            Navigator.pop(context);
+          }
+          // Open the GenerateDialog
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              return const GenerateDialog(); // Ensure GenerateDialog can be instantiated without parameters or adjust accordingly
+              isDialogOpen = true;
+              return GenerateDialog();
             },
-          );
+          ).then((_) {
+            isDialogOpen = false;
+          });
         },
         child: const Icon(Icons.add_box_sharp),
       ),

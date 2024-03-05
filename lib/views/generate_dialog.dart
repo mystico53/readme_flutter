@@ -41,6 +41,12 @@ class GenerateDialogState extends State<GenerateDialog> {
       });
     });
 
+    textController.addListener(() {
+      // Update the character count in the view model
+      Provider.of<GenerateDialogViewModel>(context, listen: false)
+          .updateCharacterCount(textController.text.length);
+    });
+
     // Immediately check if there are any shared files
     if (intentViewModel.sharedFiles.isNotEmpty) {
       // If there are shared files, update the dialog's state accordingly
