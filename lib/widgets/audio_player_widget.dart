@@ -72,44 +72,49 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     String totalDurationString = formatDuration(totalDuration);
     String currentPositionString = formatDuration(currentPosition);
 
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Received Audio: '),
-            Text('${currentPositionString} / ${totalDurationString}'),
-          ],
-        ),
-        SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                await audioPlayer.stop();
-              },
-              child: Text('Stop'),
-            ),
-            SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () async {
-                await audioPlayer.pause();
-              },
-              child: Text('Pause'),
-            ),
-            SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () async {
-                // Set the audio source again before resuming playback
-                await audioPlayer.setSource(DeviceFileSource(widget.audioUrl));
-                await audioPlayer.resume();
-              },
-              child: Text('Play'),
-            ),
-          ],
-        ),
-      ],
+    return Container(
+      color: Colors.grey[200], // Set the background color to light grey
+      padding: EdgeInsets.all(16.0), // Add padding for better spacing
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Received Audio: '),
+              Text('${currentPositionString} / ${totalDurationString}'),
+            ],
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  await audioPlayer.stop();
+                },
+                child: Text('Stop'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  await audioPlayer.pause();
+                },
+                child: Text('Pause'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  // Set the audio source again before resuming playback
+                  await audioPlayer
+                      .setSource(DeviceFileSource(widget.audioUrl));
+                  await audioPlayer.resume();
+                },
+                child: Text('Play'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

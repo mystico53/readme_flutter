@@ -19,8 +19,6 @@ class GenerateDialogViewModel with ChangeNotifier {
   }
 
   String userId = '';
-  String? _audioUrl;
-  String? get audioUrl => _audioUrl;
   String _response = '';
   int characterCount = 0;
   String get response => _response;
@@ -83,7 +81,6 @@ class GenerateDialogViewModel with ChangeNotifier {
         var checkResult = await TextToGoogleTTS.checkTTSStatus(fileId);
         if (checkResult['success']) {
           operationStatus.status = "TTS File generated";
-          _audioUrl = checkResult['audioUrl'];
           _response = checkResult['response'];
         } else {
           operationStatus.status = "Error: ${checkResult['error']}";
