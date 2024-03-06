@@ -12,6 +12,9 @@ class AppConfig {
 
   static Uri get ttsUrl => baseUrl.resolve('textToSpeech');
   static Uri get generateAiTextUrl => baseUrl.resolve('cleanText');
+  static Uri get createFirestoreDocumentUrl =>
+      baseUrl.resolve('createFirestoreDocument');
+
   //static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
   static Uri checkTTSUrl(String fileId) {
     // Construct the base URL for the checkTTS endpoint

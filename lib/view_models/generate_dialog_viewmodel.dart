@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/voice_model.dart';
 import '../services/clean_text.dart';
+import '../services/create_firestore_document_service.dart';
 import '../services/text_to_googleTTS.dart';
 import '../utils/id_manager.dart';
 
@@ -59,6 +60,10 @@ class GenerateDialogViewModel with ChangeNotifier {
     operations.add(operationStatus); // Add the operation to the list
     notifyListeners();
     try {
+      await FirestoreService().createFirestoreDocument(fileId);
+      operationStatus.status = "Firestore document created";
+      notifyListeners();
+
       if (_isCleanAIToggled) {
         text = await CleanTextService.cleanText(text);
       }
