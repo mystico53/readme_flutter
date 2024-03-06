@@ -14,6 +14,10 @@ class OperationStatus {
 }
 
 class GenerateDialogViewModel with ChangeNotifier {
+  GenerateDialogViewModel() {
+    listenToFirestoreChanges();
+  }
+
   String userId = '';
   String? _audioUrl;
   String? get audioUrl => _audioUrl;
@@ -114,5 +118,13 @@ class GenerateDialogViewModel with ChangeNotifier {
     double costPerCharacter = 0.000016;
     double totalCost = characterCount * costPerCharacter;
     return totalCost.toStringAsFixed(4); // Format to 2 decimal places
+  }
+
+  void listenToFirestoreChanges() {
+    final firestoreService = FirestoreService();
+    firestoreService.listenToAudioFileChanges((documentSnapshot) {
+      // Rebuild the UI to reflect the changes in Firestore documents
+      notifyListeners();
+    });
   }
 }

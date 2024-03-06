@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/app_config.dart';
@@ -22,5 +23,18 @@ class FirestoreService {
       print('Error creating Firestore document: $e');
       rethrow;
     }
+  }
+
+  void listenToAudioFileChanges(void Function(DocumentSnapshot) callback) {
+    final audioFilesCollection =
+        FirebaseFirestore.instance.collection('audioFiles');
+    audioFilesCollection.snapshots().listen((querySnapshot) {
+      querySnapshot.docChanges.forEach((change) {
+        if (change.type == DocumentChangeType.added ||
+            change.type == DocumentChangeType.modified) {
+          callback(change.doc);
+        }
+      });
+    });
   }
 }

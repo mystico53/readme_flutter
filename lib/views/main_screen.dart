@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
 import '../views/generate_dialog.dart';
 import '../widgets/audio_player_widget.dart';
+import 'package:intl/intl.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -75,22 +77,43 @@ class MainScreenState extends State<MainScreen> {
       body: Column(
         children: <Widget>[
           Expanded(
-            // Replace AudioFilesList with a list of operations
-            child: Consumer<GenerateDialogViewModel>(
-              builder: (context, viewModel, child) {
-                if (viewModel.operations.isEmpty) {
-                  return Center(child: Text("No operations started"));
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('audioFiles')
+                  .orderBy('created_at', descending: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final documents = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: documents.length,
+                    itemBuilder: (context, index) {
+                      final document = documents[index];
+                      final fileId = document.id;
+                      final data = document.data() as Map<String, dynamic>?;
+                      final status = data?['status'] as String?;
+                      final createdAt = data?['created_at'] as Timestamp?;
+                      final formattedCreatedAt = createdAt != null
+                          ? DateFormat('yyyy-MM-dd HH:mm:ss')
+                              .format(createdAt.toDate())
+                          : 'Pending';
+                      return ListTile(
+                        title: Text('File ID: $fileId'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Status: ${status ?? 'Pending'}'),
+                            Text('Created At: $formattedCreatedAt'),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return CircularProgressIndicator();
                 }
-                return ListView.builder(
-                  itemCount: viewModel.operations.length,
-                  itemBuilder: (context, index) {
-                    final operation = viewModel.operations[index];
-                    return ListTile(
-                      title: Text("Operation: ${operation.fileId}"),
-                      subtitle: Text("Status: ${operation.status}"),
-                    );
-                  },
-                );
               },
             ),
           ),

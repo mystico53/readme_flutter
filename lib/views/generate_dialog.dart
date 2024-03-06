@@ -150,13 +150,15 @@ class GenerateDialogState extends State<GenerateDialog> {
                   Consumer<GenerateDialogViewModel>(
                     builder: (context, viewModel, child) => ElevatedButton(
                       onPressed: viewModel.isGenerateButtonEnabled
-                          ? () async {
-                              await viewModel.generateAndCheckAudio(
-                                  textController.text,
-                                  viewModel
-                                      .userId, // Assuming userId is correctly set in viewModel
-                                  viewModel
-                                      .currentSelectedVoice); // Use the viewModel's selectedVoice
+                          ? () {
+                              // Initiate the audio generation process
+                              viewModel.generateAndCheckAudio(
+                                textController.text,
+                                viewModel.userId,
+                                viewModel.currentSelectedVoice,
+                              );
+                              // Close the dialog immediately
+                              Navigator.pop(context);
                             }
                           : null,
                       child: const Text('Generate Audio'),
