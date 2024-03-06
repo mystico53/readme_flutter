@@ -34,23 +34,37 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   void initAudio() async {
-    await audioPlayer.setSource(DeviceFileSource(widget.audioUrl));
-    audioPlayer.onDurationChanged.listen((duration) {
+    if (widget.audioUrl.isEmpty) {
+      // If the audio URL is empty, set the total duration to zero
       setState(() {
-        totalDuration = duration;
+        totalDuration = Duration.zero;
       });
-    });
+      return;
+    }
 
-    audioPlayer.onPositionChanged.listen((position) {
+    try {
+      await audioPlayer.setSource(UrlSource(widget.audioUrl));
+      audioPlayer.onDurationChanged.listen((duration) {
+        setState(() {
+          totalDuration = duration;
+        });
+      });
+      audioPlayer.onPositionChanged.listen((position) {
+        setState(() {
+          currentPosition = position;
+        });
+      });
+      timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+        if (!mounted) return;
+        setState(() {});
+      });
+    } catch (e) {
+      print('Error setting audio source: ${e.toString()}');
+      // Set the total duration to zero if an error occurs
       setState(() {
-        currentPosition = position;
+        totalDuration = Duration.zero;
       });
-    });
-
-    timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
-      if (!mounted) return;
-      setState(() {});
-    });
+    }
   }
 
   @override
@@ -69,8 +83,18 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // Format the total duration and current position for display
     String totalDurationString = formatDuration(totalDuration);
     String currentPositionString = formatDuration(currentPosition);
+
+    print("debug: Building audio player widget");
+
+    // Modify the logic to allow the UI to load even when total duration is zero
+    // Instead of returning an error message immediately, we'll provide a default UI
+    bool isAudioLoaded = totalDuration != Duration.zero;
+
+    // Debug message to indicate whether the audio is considered loaded
+    print("debug: isAudioLoaded - $isAudioLoaded");
 
     return Container(
       color: Colors.grey[200], // Set the background color to light grey
@@ -81,7 +105,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text('Received Audio: '),
-              Text('${currentPositionString} / ${totalDurationString}'),
+              // Display the current position and total duration
+              // If the audio is not loaded, indicate that to the user
+              Text(isAudioLoaded
+                  ? '${currentPositionString} / ${totalDurationString}'
+                  : 'Loading...'),
             ],
           ),
           SizedBox(height: 10),
@@ -90,6 +118,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             children: [
               ElevatedButton(
                 onPressed: () async {
+                  print("debug: Stopping audio");
                   await audioPlayer.stop();
                 },
                 child: Text('Stop'),
@@ -97,6 +126,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () async {
+                  print("debug: Pausing audio");
                   await audioPlayer.pause();
                 },
                 child: Text('Pause'),
@@ -104,9 +134,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () async {
-                  // Set the audio source again before resuming playback
-                  await audioPlayer
-                      .setSource(DeviceFileSource(widget.audioUrl));
+                  print("debug: Attempting to play audio");
+                  // Attempt to play the audio. If totalDuration is zero because the audio is not fully loaded,
+                  // this action can force a load or indicate an error to the user based on the audio player's behavior.
                   await audioPlayer.resume();
                 },
                 child: Text('Play'),
