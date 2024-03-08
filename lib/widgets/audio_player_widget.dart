@@ -54,10 +54,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           currentPosition = position;
         });
       });
+      /*
       timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
         if (!mounted) return;
         setState(() {});
       });
+      */
     } catch (e) {
       print('Error setting audio source: ${e.toString()}');
       // Set the total duration to zero if an error occurs

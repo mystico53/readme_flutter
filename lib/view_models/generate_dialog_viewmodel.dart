@@ -6,13 +6,6 @@ import '../services/create_firestore_document_service.dart';
 import '../services/text_to_googleTTS.dart';
 import '../utils/id_manager.dart';
 
-class OperationStatus {
-  final String fileId;
-  String status;
-
-  OperationStatus({required this.fileId, required this.status});
-}
-
 class GenerateDialogViewModel with ChangeNotifier {
   GenerateDialogViewModel() {
     listenToFirestoreChanges();
@@ -48,51 +41,55 @@ class GenerateDialogViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  // Add a new property to track operations and their statuses
-  List<OperationStatus> operations = [];
-
   Future<void> generateAndCheckAudio(
       String text, String userId, VoiceModel? selectedVoice) async {
     _isGenerateButtonEnabled =
         false; // Disable the button when the process starts
     final fileId =
         "${IdManager.generateAudioId()}.wav"; // Generate fileId immediately
-    final operationStatus =
-        OperationStatus(fileId: fileId, status: "File ID created");
-    operations.add(operationStatus); // Add the operation to the list
-    notifyListeners();
+
     try {
       await FirestoreService().createFirestoreDocument(fileId);
-      operationStatus.status = "Firestore document created";
-      notifyListeners();
 
       if (_isCleanAIToggled) {
+        await FirestoreService()
+            .updateFirestoreDocumentStatus(fileId, 'cleaning');
         text = await CleanTextService.cleanText(text);
+        await FirestoreService()
+            .updateFirestoreDocumentStatus(fileId, 'cleaned');
       }
 
-      operationStatus.status = "Cleaned Text";
-      notifyListeners(); // Update status
+      print('Sending text to server:');
+      print('  Text: $text');
+      print('  User ID: $userId');
+      print('  Selected Voice: ${selectedVoice?.name ?? 'Default'}');
+      print('  File ID: $fileId');
 
       var sendResult = await TextToGoogleTTS.sendTextToServer(
           text, userId, selectedVoice, fileId);
+
+      print('Send result: $sendResult');
       if (sendResult['success']) {
-        operationStatus.status = "Google TTS Started";
-        notifyListeners();
         var checkResult = await TextToGoogleTTS.checkTTSStatus(fileId);
         if (checkResult['success']) {
-          operationStatus.status = "TTS File generated";
           _response = checkResult['response'];
         } else {
-          operationStatus.status = "Error: ${checkResult['error']}";
           _response = checkResult['error'];
+          await FirestoreService()
+              .updateFirestoreDocumentStatus(fileId, 'error');
         }
       } else {
-        operationStatus.status = "Error: ${sendResult['error']}";
-        _response = sendResult['error'] ?? 'Failed to send text to server.';
+        if (sendResult['statusCode'] == 400) {
+          _response = sendResult['error'] ?? 'Missing required fields.';
+          await FirestoreService()
+              .updateFirestoreDocumentStatus(fileId, 'error');
+        } else {
+          _response = sendResult['error'] ?? 'Failed to send text to server.';
+        }
       }
     } catch (e) {
-      operationStatus.status = "Error: $e";
       _response = 'Error during text-to-speech processing: $e';
+      await FirestoreService().updateFirestoreDocumentStatus(fileId, 'error');
     } finally {
       _isGenerateButtonEnabled =
           true; // Re-enable the button after the process completes or fails
@@ -114,7 +111,7 @@ class GenerateDialogViewModel with ChangeNotifier {
   String calculateEstimatedCost() {
     double costPerCharacter = 0.000016;
     double totalCost = characterCount * costPerCharacter;
-    return totalCost.toStringAsFixed(4); // Format to 2 decimal places
+    return totalCost.toStringAsFixed(4); // Format to 4 decimal places
   }
 
   void listenToFirestoreChanges() {

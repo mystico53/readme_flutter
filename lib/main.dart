@@ -7,6 +7,7 @@ import 'view_models/text_cleaner_viewmodel.dart';
 import 'view_models/user_id_viewmodel.dart';
 import 'views/main_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/rendering.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

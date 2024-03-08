@@ -62,7 +62,7 @@ class MainScreenState extends State<MainScreen> {
 
   void _scrollToBottom() {
     _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent + 200,
+      _scrollController.position.maxScrollExtent,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeOut,
     );
@@ -79,8 +79,12 @@ class MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Log when the build method is called
+    print("Building MainScreen widget");
+
     final generateDialogViewModel =
         Provider.of<GenerateDialogViewModel>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lisme - listen to my text'),
@@ -94,8 +98,15 @@ class MainScreenState extends State<MainScreen> {
                   .orderBy('created_at', descending: false)
                   .snapshots(),
               builder: (context, snapshot) {
+                // Log the state of the snapshot
+                print(
+                    "StreamBuilder rebuild with snapshot state: ${snapshot.connectionState}");
+
                 if (snapshot.hasData) {
                   final documents = snapshot.data!.docs;
+                  // Log how many documents were fetched
+                  print("Fetched ${documents.length} documents");
+
                   return Scrollbar(
                     controller: _scrollController,
                     child: ListView.builder(
@@ -110,34 +121,43 @@ class MainScreenState extends State<MainScreen> {
                         final formattedCreatedAt = createdAt != null
                             ? DateFormat('yyyy-MM-dd HH:mm:ss')
                                 .format(createdAt.toDate())
-                            : 'Pending';
+                            : 'endingP';
+                        // Log the document being processed
+                        print("Processing document with ID: $fileId");
+
                         return ListTile(
                           title: Text('File ID: $fileId'),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Status: ${status ?? 'Pending'}'),
+                              Text(
+                                'Status: ${status ?? 'Preparing'}',
+                                style: TextStyle(
+                                  color: status == 'error' ? Colors.red : null,
+                                ),
+                              ),
                               Text('Created At: $formattedCreatedAt'),
                             ],
                           ),
                           onTap: () {
-                            // Get the httpsUrl field from the Firestore document
+                            // Log the document ID and URL when a list tile is tapped
+                            print("Tapped on document: $fileId");
                             final httpsUrl = data?['httpsUrl'] as String?;
                             if (httpsUrl != null && httpsUrl.isNotEmpty) {
+                              print("Selected audio URL: $httpsUrl");
                               setState(() {
                                 selectedAudioUrl = httpsUrl;
                               });
                             } else {
-                              // Handle the case when the URL is null or empty
                               print(
                                   'Audio URL is missing or invalid for document: $fileId');
-                              // Display an error message or take appropriate action
                             }
                           },
                           trailing: IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () async {
-                              // Delete the document from Firestore
+                              // Log the deletion of a document
+                              print("Deleting document with ID: $fileId");
                               await FirebaseFirestore.instance
                                   .collection('audioFiles')
                                   .doc(fileId)
@@ -149,8 +169,12 @@ class MainScreenState extends State<MainScreen> {
                     ),
                   );
                 } else if (snapshot.hasError) {
+                  // Log the error
+                  print("Error fetching documents: ${snapshot.error}");
                   return Text('Error: ${snapshot.error}');
                 } else {
+                  // Log the loading state
+                  print("Waiting for documents...");
                   return CircularProgressIndicator();
                 }
               },
@@ -177,7 +201,7 @@ class MainScreenState extends State<MainScreen> {
               },
             ).then((callback) {
               isDialogOpen = false;
-              Future.delayed(Duration(milliseconds: 500), () {
+              Future.delayed(Duration(milliseconds: 1500), () {
                 _scrollToBottom();
               });
             });
