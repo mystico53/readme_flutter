@@ -30,11 +30,9 @@ class MainScreenState extends State<MainScreen> {
   }
 
   void checkForSharedFiles() {
-    print("checkForSharedFiles started");
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     if (intentViewModel.sharedFiles.isNotEmpty) {
-      print("Shared files are available in MainScreen.");
       if (isDialogOpen) {
         // Close the current dialog
         Navigator.pop(context);
@@ -80,14 +78,13 @@ class MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     // Log when the build method is called
-    print("Building MainScreen widget");
 
     final generateDialogViewModel =
         Provider.of<GenerateDialogViewModel>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lisme - listen to my text'),
+        title: const Text('Lisme | Version 0.1.2'),
       ),
       body: Column(
         children: <Widget>[
@@ -98,75 +95,81 @@ class MainScreenState extends State<MainScreen> {
                   .orderBy('created_at', descending: false)
                   .snapshots(),
               builder: (context, snapshot) {
-                // Log the state of the snapshot
-                print(
-                    "StreamBuilder rebuild with snapshot state: ${snapshot.connectionState}");
-
                 if (snapshot.hasData) {
                   final documents = snapshot.data!.docs;
                   // Log how many documents were fetched
-                  print("Fetched ${documents.length} documents");
 
-                  return Scrollbar(
+                  return ListView.separated(
                     controller: _scrollController,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: documents.length,
-                      itemBuilder: (context, index) {
-                        final document = documents[index];
-                        final fileId = document.id;
-                        final data = document.data() as Map<String, dynamic>?;
-                        final status = data?['status'] as String?;
-                        final createdAt = data?['created_at'] as Timestamp?;
-                        final formattedCreatedAt = createdAt != null
-                            ? DateFormat('yyyy-MM-dd HH:mm:ss')
-                                .format(createdAt.toDate())
-                            : 'endingP';
-                        // Log the document being processed
-                        print("Processing document with ID: $fileId");
+                    itemCount: documents.length,
+                    separatorBuilder: (context, index) => Divider(),
+                    itemBuilder: (context, index) {
+                      final document = documents[index];
+                      final fileId = document.id;
+                      final data = document.data() as Map<String, dynamic>?;
+                      final status = data?['status'] as String?;
+                      final createdAt = data?['created_at'] as Timestamp?;
+                      final formattedCreatedAt = createdAt != null
+                          ? DateFormat('yyyy-MM-dd HH:mm:ss')
+                              .format(createdAt.toDate())
+                          : 'endingP';
+                      final title = data?['title'] as String?;
 
-                        return ListTile(
-                          title: Text('File ID: $fileId'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Status: ${status ?? 'Preparing'}',
-                                style: TextStyle(
-                                  color: status == 'error' ? Colors.red : null,
-                                ),
+                      return ListTile(
+                        title: Text(title ?? 'New Lisme is created'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Status: ${status ?? 'Preparing'}',
+                              style: TextStyle(
+                                color: status == 'error' ? Colors.red : null,
                               ),
-                              Text('Created At: $formattedCreatedAt'),
-                            ],
-                          ),
-                          onTap: () {
-                            // Log the document ID and URL when a list tile is tapped
-                            print("Tapped on document: $fileId");
-                            final httpsUrl = data?['httpsUrl'] as String?;
-                            if (httpsUrl != null && httpsUrl.isNotEmpty) {
-                              print("Selected audio URL: $httpsUrl");
-                              setState(() {
-                                selectedAudioUrl = httpsUrl;
-                              });
-                            } else {
-                              print(
-                                  'Audio URL is missing or invalid for document: $fileId');
-                            }
-                          },
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () async {
-                              // Log the deletion of a document
-                              print("Deleting document with ID: $fileId");
-                              await FirebaseFirestore.instance
-                                  .collection('audioFiles')
-                                  .doc(fileId)
-                                  .delete();
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                            ),
+                            Row(
+                              children: [
+                                Text('Created At: $formattedCreatedAt'),
+                                SizedBox(width: 8),
+                                IconButton(
+                                  icon: Icon(Icons.delete, size: 16),
+                                  onPressed: () async {
+                                    // Log the deletion of a document
+                                    print("Deleting document with ID: $fileId");
+                                    await FirebaseFirestore.instance
+                                        .collection('audioFiles')
+                                        .doc(fileId)
+                                        .delete();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        trailing: status == 'ready'
+                            ? CircleAvatar(
+                                backgroundColor: Colors.blue,
+                                child: IconButton(
+                                  icon: Icon(Icons.play_arrow,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    final httpsUrl =
+                                        data?['httpsUrl'] as String?;
+                                    if (httpsUrl != null &&
+                                        httpsUrl.isNotEmpty) {
+                                      print("Selected audio URL: $httpsUrl");
+                                      setState(() {
+                                        selectedAudioUrl = httpsUrl;
+                                      });
+                                    } else {
+                                      print(
+                                          'Audio URL is missing or invalid for document: $fileId');
+                                    }
+                                  },
+                                ),
+                              )
+                            : Icon(Icons.hourglass_empty),
+                      );
+                    },
                   );
                 } else if (snapshot.hasError) {
                   // Log the error

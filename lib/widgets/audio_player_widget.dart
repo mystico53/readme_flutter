@@ -89,14 +89,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     String totalDurationString = formatDuration(totalDuration);
     String currentPositionString = formatDuration(currentPosition);
 
-    print("debug: Building audio player widget");
-
     // Modify the logic to allow the UI to load even when total duration is zero
     // Instead of returning an error message immediately, we'll provide a default UI
     bool isAudioLoaded = totalDuration != Duration.zero;
-
-    // Debug message to indicate whether the audio is considered loaded
-    print("debug: isAudioLoaded - $isAudioLoaded");
 
     return Container(
       color: Colors.grey[200], // Set the background color to light grey
@@ -111,7 +106,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               // If the audio is not loaded, indicate that to the user
               Text(isAudioLoaded
                   ? '${currentPositionString} / ${totalDurationString}'
-                  : 'Loading...'),
+                  : 'Waiting...'),
             ],
           ),
           SizedBox(height: 10),

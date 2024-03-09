@@ -47,7 +47,7 @@ class MyAppState extends State<MyApp> {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.loadInitialSharedFiles();
-    intentViewModel.startListeningForIntents();
+    intentViewModel.startListeningForIntents(context);
   }
 
   @override

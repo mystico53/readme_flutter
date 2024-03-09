@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/voice_model.dart';
 import '../services/clean_text.dart';
 import '../services/create_firestore_document_service.dart';
+import '../services/generate_title_service.dart';
+import '../services/process_text_service.dart';
 import '../services/text_to_googleTTS.dart';
 import '../utils/id_manager.dart';
 
@@ -19,19 +21,6 @@ class GenerateDialogViewModel with ChangeNotifier {
   VoiceModel? get currentSelectedVoice => _currentSelectedVoice;
   VoiceModel? _currentSelectedVoice;
 
-  // Generate Button
-  bool _isGenerateButtonEnabled = true;
-  bool get isGenerateButtonEnabled => _isGenerateButtonEnabled;
-  void disableGenerateButton() {
-    _isGenerateButtonEnabled = false;
-    notifyListeners();
-  }
-
-  void enableGenerateButton() {
-    _isGenerateButtonEnabled = true;
-    notifyListeners();
-  }
-
   // Clean AI Switch Toggle
   bool get isCleanAIToggled => _isCleanAIToggled;
   bool _isCleanAIToggled = true;
@@ -43,13 +32,13 @@ class GenerateDialogViewModel with ChangeNotifier {
 
   Future<void> generateAndCheckAudio(
       String text, String userId, VoiceModel? selectedVoice) async {
-    _isGenerateButtonEnabled =
-        false; // Disable the button when the process starts
     final fileId =
         "${IdManager.generateAudioId()}.wav"; // Generate fileId immediately
 
     try {
-      await FirestoreService().createFirestoreDocument(fileId);
+      await FirestoreService().createFirestoreDocument(fileId, 'pending');
+
+      await GenerateTitleService.generateTitle(text, fileId);
 
       if (_isCleanAIToggled) {
         await FirestoreService()
@@ -69,6 +58,12 @@ class GenerateDialogViewModel with ChangeNotifier {
           text, userId, selectedVoice, fileId);
 
       print('Send result: $sendResult');
+      if (!sendResult['success']) {
+        print(' Server responded with an error');
+        _response = sendResult['error'] ?? 'Failed to send text to server.';
+        await FirestoreService()
+            .updateFirestoreDocumentStatus(fileId, 'error, no text sent');
+      }
       if (sendResult['success']) {
         var checkResult = await TextToGoogleTTS.checkTTSStatus(fileId);
         if (checkResult['success']) {
@@ -78,22 +73,23 @@ class GenerateDialogViewModel with ChangeNotifier {
           await FirestoreService()
               .updateFirestoreDocumentStatus(fileId, 'error');
         }
-      } else {
-        if (sendResult['statusCode'] == 400) {
-          _response = sendResult['error'] ?? 'Missing required fields.';
-          await FirestoreService()
-              .updateFirestoreDocumentStatus(fileId, 'error');
-        } else {
-          _response = sendResult['error'] ?? 'Failed to send text to server.';
-        }
       }
     } catch (e) {
       _response = 'Error during text-to-speech processing: $e';
       await FirestoreService().updateFirestoreDocumentStatus(fileId, 'error');
     } finally {
-      _isGenerateButtonEnabled =
-          true; // Re-enable the button after the process completes or fails
       notifyListeners(); // Notify listeners to update the UI based on the new state
+    }
+  }
+
+  Future<void> sendTextToServer(String text) async {
+    try {
+      await ProcessTextService.rawIntentToServer(text);
+      // Handle the success case
+      print('Raw Intent sent to server successfully');
+    } catch (e) {
+      // Handle the error case
+      print('Error sending text to server: $e');
     }
   }
 

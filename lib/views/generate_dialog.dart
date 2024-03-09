@@ -17,10 +17,11 @@ class GenerateDialog extends StatefulWidget {
 
 class GenerateDialogState extends State<GenerateDialog> {
   // Add your state variables here if needed
-  VoiceModel? _currentSelectedVoice;
+  //VoiceModel? _currentSelectedVoice;
   final textController = TextEditingController();
   final scrollController = ScrollController();
   String audioUrl = '';
+  String rawIntent = '';
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class GenerateDialogState extends State<GenerateDialog> {
     // Immediately check if there are any shared files
     if (intentViewModel.sharedFiles.isNotEmpty) {
       // If there are shared files, update the dialog's state accordingly
-      print("Shared files are available.");
+
       // For example, you might want to prepopulate some UI elements with this data
       // This is just an example, replace it with your actual logic
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -149,18 +150,16 @@ class GenerateDialogState extends State<GenerateDialog> {
                   const SizedBox(width: 10), // Spacing between buttons
                   Consumer<GenerateDialogViewModel>(
                     builder: (context, viewModel, child) => ElevatedButton(
-                      onPressed: viewModel.isGenerateButtonEnabled
-                          ? () {
-                              // Initiate the audio generation process
-                              viewModel.generateAndCheckAudio(
-                                textController.text,
-                                viewModel.userId,
-                                viewModel.currentSelectedVoice,
-                              );
-                              // Close the dialog immediately
-                              Navigator.pop(context);
-                            }
-                          : null,
+                      onPressed: () {
+                        // Initiate the audio generation process
+                        viewModel.generateAndCheckAudio(
+                          textController.text,
+                          viewModel.userId,
+                          viewModel.currentSelectedVoice,
+                        );
+                        // Close the dialog immediately
+                        Navigator.pop(context);
+                      },
                       child: const Text('Generate Audio'),
                     ),
                   ),
@@ -178,19 +177,14 @@ class GenerateDialogState extends State<GenerateDialog> {
             ),
 
             const SizedBox(width: 10), // Spacing between buttons
-            // Using Consumer to rebuild the button based on ButtonState
             SwitchListTile(
               title: Text("Clean with AI"),
               value: Provider.of<GenerateDialogViewModel>(context)
                   .isCleanAIToggled,
-              onChanged: Provider.of<GenerateDialogViewModel>(context)
-                      .isGenerateButtonEnabled
-                  ? (bool value) {
-                      Provider.of<GenerateDialogViewModel>(context,
-                              listen: false)
-                          .toggleCleanAI(value);
-                    }
-                  : null, // Disables interaction with the switch during operation
+              onChanged: (bool value) {
+                Provider.of<GenerateDialogViewModel>(context, listen: false)
+                    .toggleCleanAI(value);
+              },
             )
           ],
         ),

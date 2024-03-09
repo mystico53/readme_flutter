@@ -4,24 +4,34 @@ import 'dart:convert';
 import '../utils/app_config.dart';
 
 class FirestoreService {
-  Future<void> createFirestoreDocument(String fileId) async {
+  Future<void> createFirestoreDocument(String fileId, String status) async {
+    print(
+        'Attempting to create Firestore document with fileId: $fileId and status: $status'); // Debug before sending request
+
     try {
       final response = await http.post(
         AppConfig.createFirestoreDocumentUrl,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'fileId': fileId}),
+        body: jsonEncode({
+          'fileId': fileId,
+          'status': status,
+        }),
       );
 
+      // Debug print to log the response body. Helpful to understand the response from the server.
+      print('Firestore document creation response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        print('Firestore document created with ID: $fileId');
+        // Assuming the server returns a success response when a document is created
+        print('Document with fileId: $fileId successfully created.');
       } else {
+        // If server response indicates failure (non-200 status code)
         print(
-            'Error creating Firestore document. Status code: ${response.statusCode}');
-        throw Exception('Failed to create Firestore document');
+            'Failed to create document with fileId: $fileId. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error creating Firestore document: $e');
-      rethrow;
+      // Debug print to log any exceptions encountered during the HTTP request
+      print('Exception occurred while creating Firestore document: $e');
     }
   }
 
@@ -30,22 +40,17 @@ class FirestoreService {
         FirebaseFirestore.instance.collection('audioFiles');
 
     // Debug message to indicate that we're starting to listen to changes
-    print("Listening to changes in audioFiles collection");
 
     audioFilesCollection.snapshots().listen((querySnapshot) {
       // Debug message to indicate that a snapshot has been received
-      print(
-          "Received a querySnapshot with ${querySnapshot.docChanges.length} changes");
 
       querySnapshot.docChanges.forEach((change) {
         // Debug message to log the type of change detected
-        print(
-            "Detected a ${change.type} change in document with ID: ${change.doc.id}");
 
         if (change.type == DocumentChangeType.added ||
             change.type == DocumentChangeType.modified) {
           // Debug message before invoking the callback
-          print("Invoking callback for document with ID: ${change.doc.id}");
+
           callback(change.doc);
         }
       });

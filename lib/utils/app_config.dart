@@ -14,6 +14,8 @@ class AppConfig {
   static Uri get generateAiTextUrl => baseUrl.resolve('cleanText');
   static Uri get createFirestoreDocumentUrl =>
       baseUrl.resolve('createFirestoreDocument');
+  static Uri get generateTitleUrl => baseUrl.resolve('generateTitle');
+  static Uri get processRawIntentUrl => baseUrl.resolve('processRawIntent');
 
   //static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
   static Uri checkTTSUrl(String fileId) {

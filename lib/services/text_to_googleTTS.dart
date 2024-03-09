@@ -8,9 +8,6 @@ import '../models/voice_model.dart';
 class TextToGoogleTTS {
   static Future<Map<String, dynamic>> sendTextToServer(String text,
       String userId, VoiceModel? selectedVoice, String fileId) async {
-    //final fileId = '${IdManager.generateAudioId()}.wav';
-    //print("Debug: Generated fileId: $fileId");
-
     final languageCode = selectedVoice?.languageCode ?? 'en-US';
     final voiceName = selectedVoice?.voiceName ?? 'en-US-Neural2-J';
     final speakingRate = selectedVoice?.speakingRate ?? 1.0;
