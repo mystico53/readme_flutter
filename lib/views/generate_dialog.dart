@@ -36,7 +36,8 @@ class GenerateDialogState extends State<GenerateDialog> {
         if (mounted) {
           setState(() {
             textController.text =
-                intentViewModel.sharedFiles.map((file) => file.path).join(", ");
+                //intentViewModel.sharedFiles.map((file) => file.path).join(", ");
+                intentViewModel.sharedFiles.map((file) => file.path).join("\n");
           });
         }
       });
@@ -59,7 +60,8 @@ class GenerateDialogState extends State<GenerateDialog> {
           setState(() {
             // Assuming you have a TextEditingController for displaying the file paths
             textController.text =
-                intentViewModel.sharedFiles.map((file) => file.path).join(", ");
+                //intentViewModel.sharedFiles.map((file) => file.path).join(", ");
+                intentViewModel.sharedFiles.map((file) => file.path).join("\n");
           });
         }
       });

@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../services/intent_service.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import '../view_models/generate_dialog_viewmodel.dart';
 
 class IntentViewModel with ChangeNotifier {
   final IntentService _intentService = IntentService();
@@ -21,13 +19,6 @@ class IntentViewModel with ChangeNotifier {
       print("Received shared files: ${files.length} files");
 
       _sharedFiles = files;
-      rawIntent = _sharedFiles.map((file) => file.path).join("\n");
-
-      print("Raw Intent: $rawIntent");
-
-      // Send the rawIntent to the server using the GenerateDialogViewModel
-      Provider.of<GenerateDialogViewModel>(context, listen: false)
-          .sendTextToServer(rawIntent);
 
       notifyListeners();
     }, onError: (err) {

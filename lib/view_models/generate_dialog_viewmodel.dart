@@ -36,7 +36,10 @@ class GenerateDialogViewModel with ChangeNotifier {
         "${IdManager.generateAudioId()}.wav"; // Generate fileId immediately
 
     try {
-      await FirestoreService().createFirestoreDocument(fileId, 'pending');
+      await FirestoreService().createFirestoreDocument(fileId, 'initiating');
+
+      text = await ProcessTextService.processRawIntent(text);
+      print("Debug: Text from Process Text Service: $text");
 
       await GenerateTitleService.generateTitle(text, fileId);
 
@@ -79,17 +82,6 @@ class GenerateDialogViewModel with ChangeNotifier {
       await FirestoreService().updateFirestoreDocumentStatus(fileId, 'error');
     } finally {
       notifyListeners(); // Notify listeners to update the UI based on the new state
-    }
-  }
-
-  Future<void> sendTextToServer(String text) async {
-    try {
-      await ProcessTextService.rawIntentToServer(text);
-      // Handle the success case
-      print('Raw Intent sent to server successfully');
-    } catch (e) {
-      // Handle the error case
-      print('Error sending text to server: $e');
     }
   }
 

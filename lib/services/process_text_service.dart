@@ -3,24 +3,30 @@ import 'package:http/http.dart' as http;
 import 'package:readme_app/utils/app_config.dart';
 
 class ProcessTextService {
-  static Future<void> rawIntentToServer(String text) async {
+  static Future<String> processRawIntent(String text) async {
+    print("process raw intent text $text");
     try {
       final url = AppConfig.processRawIntentUrl;
-
       final response = await http.post(
-        url as Uri, // Use url directly as Uri
+        url as Uri,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'text': text}),
       );
 
       if (response.statusCode == 200) {
-        print('Raw Intent sent to server successfully');
+        final responseData = json.decode(response.body);
+        final processedText = responseData['text'];
+        print('Processed Raw Intent received from server:');
+        print(processedText);
+        return processedText;
       } else {
         print(
-            'Error sending text to server. Status code: ${response.statusCode}');
+            'Error sending raw intent to server. Status code: ${response.statusCode}');
+        throw Exception('Failed to process raw intent');
       }
     } catch (e) {
-      print('Error sending text to server: $e');
+      print('Error processing raw intent: $e');
+      throw Exception('Failed to process raw intent');
     }
   }
 }
