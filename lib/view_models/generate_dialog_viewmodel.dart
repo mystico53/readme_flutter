@@ -23,7 +23,7 @@ class GenerateDialogViewModel with ChangeNotifier {
 
   // Clean AI Switch Toggle
   bool get isCleanAIToggled => _isCleanAIToggled;
-  bool _isCleanAIToggled = true;
+  bool _isCleanAIToggled = false;
 
   void toggleCleanAI(bool value) {
     _isCleanAIToggled = value;

@@ -16,6 +16,7 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   String selectedAudioUrl = '';
+  String selectedAudioTitle = '';
   final _scrollController = ScrollController();
   String userId = '';
   String sharedContent = "";
@@ -154,15 +155,17 @@ class MainScreenState extends State<MainScreen> {
                                   onPressed: () {
                                     final httpsUrl =
                                         data?['httpsUrl'] as String?;
+                                    final title = data?['title'] as String?;
                                     if (httpsUrl != null &&
-                                        httpsUrl.isNotEmpty) {
-                                      print("Selected audio URL: $httpsUrl");
+                                        httpsUrl.isNotEmpty &&
+                                        title != null) {
                                       setState(() {
                                         selectedAudioUrl = httpsUrl;
+                                        selectedAudioTitle = title;
                                       });
                                     } else {
                                       print(
-                                          'Audio URL is missing or invalid for document: $fileId');
+                                          'Audio URL or title is missing or invalid for document: $fileId');
                                     }
                                   },
                                 ),
@@ -183,9 +186,11 @@ class MainScreenState extends State<MainScreen> {
               },
             ),
           ),
-          AudioPlayerWidget(audioUrl: selectedAudioUrl),
+          AudioPlayerWidget(
+              audioUrl: selectedAudioUrl, audioTitle: selectedAudioTitle),
         ],
       ),
+      /*
       floatingActionButton: Padding(
         padding:
             EdgeInsets.only(bottom: 120.0), // Adjust the offset value as needed
@@ -211,7 +216,7 @@ class MainScreenState extends State<MainScreen> {
           },
           child: const Icon(Icons.add_box_sharp),
         ),
-      ),
+      ),*/
     );
   }
 }
