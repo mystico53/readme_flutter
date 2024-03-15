@@ -9,15 +9,15 @@ import '../services/text_to_googleTTS.dart';
 import '../utils/id_manager.dart';
 
 class GenerateDialogViewModel with ChangeNotifier {
-  GenerateDialogViewModel() {
+  GenerateDialogViewModel(this.userId) {
     listenToFirestoreChanges();
   }
 
-  String userId = '';
+  final String userId;
   String _response = '';
   int characterCount = 0;
-  String get response => _response;
 
+  String get response => _response;
   VoiceModel? get currentSelectedVoice => _currentSelectedVoice;
   VoiceModel? _currentSelectedVoice;
 
@@ -31,57 +31,64 @@ class GenerateDialogViewModel with ChangeNotifier {
   }
 
   Future<void> generateAndCheckAudio(
-      String text, String userId, VoiceModel? selectedVoice) async {
-    final fileId =
-        "${IdManager.generateAudioId()}.wav"; // Generate fileId immediately
+    String text,
+    VoiceModel? selectedVoice,
+    String userId,
+  ) async {
+    final fileId = "${IdManager.generateAudioId()}.wav";
 
     try {
-      await FirestoreService().createFirestoreDocument(fileId, 'initiating');
-
+      await FirestoreService()
+          .createFirestoreDocument(fileId, 'initiating', userId);
       text = await ProcessTextService.processRawIntent(text);
       print("Debug: Text from Process Text Service: $text");
-
-      await GenerateTitleService.generateTitle(text, fileId);
+      await GenerateTitleService.generateTitle(text, fileId, userId);
 
       if (_isCleanAIToggled) {
         await FirestoreService()
-            .updateFirestoreDocumentStatus(fileId, 'cleaning');
+            .updateFirestoreDocumentStatus(fileId, 'cleaning', userId);
         text = await CleanTextService.cleanText(text);
         await FirestoreService()
-            .updateFirestoreDocumentStatus(fileId, 'cleaned');
+            .updateFirestoreDocumentStatus(fileId, 'cleaned', userId);
       }
 
       print('Sending text to server:');
-      print('  Text: $text');
-      print('  User ID: $userId');
-      print('  Selected Voice: ${selectedVoice?.name ?? 'Default'}');
-      print('  File ID: $fileId');
+      print(' Text: $text');
+      print(' User ID: $userId');
+      print(' Selected Voice: ${selectedVoice?.name ?? 'Default'}');
+      print(' File ID: $fileId');
 
       var sendResult = await TextToGoogleTTS.sendTextToServer(
-          text, userId, selectedVoice, fileId);
-
+        text,
+        userId,
+        selectedVoice,
+        fileId,
+      );
       print('Send result: $sendResult');
+
       if (!sendResult['success']) {
         print(' Server responded with an error');
         _response = sendResult['error'] ?? 'Failed to send text to server.';
-        await FirestoreService()
-            .updateFirestoreDocumentStatus(fileId, 'error, no text sent');
+        await FirestoreService().updateFirestoreDocumentStatus(
+            fileId, 'error, no text sent', userId);
       }
+
       if (sendResult['success']) {
-        var checkResult = await TextToGoogleTTS.checkTTSStatus(fileId);
+        var checkResult = await TextToGoogleTTS.checkTTSStatus(fileId, userId);
         if (checkResult['success']) {
           _response = checkResult['response'];
         } else {
           _response = checkResult['error'];
           await FirestoreService()
-              .updateFirestoreDocumentStatus(fileId, 'error');
+              .updateFirestoreDocumentStatus(fileId, 'error', userId);
         }
       }
     } catch (e) {
       _response = 'Error during text-to-speech processing: $e';
-      await FirestoreService().updateFirestoreDocumentStatus(fileId, 'error');
+      await FirestoreService()
+          .updateFirestoreDocumentStatus(fileId, 'error', userId);
     } finally {
-      notifyListeners(); // Notify listeners to update the UI based on the new state
+      notifyListeners();
     }
   }
 
@@ -99,13 +106,12 @@ class GenerateDialogViewModel with ChangeNotifier {
   String calculateEstimatedCost() {
     double costPerCharacter = 0.000016;
     double totalCost = characterCount * costPerCharacter;
-    return totalCost.toStringAsFixed(4); // Format to 4 decimal places
+    return totalCost.toStringAsFixed(4);
   }
 
   void listenToFirestoreChanges() {
     final firestoreService = FirestoreService();
-    firestoreService.listenToAudioFileChanges((documentSnapshot) {
-      // Rebuild the UI to reflect the changes in Firestore documents
+    firestoreService.listenToAudioFileChanges(userId, (documentSnapshot) {
       notifyListeners();
     });
   }

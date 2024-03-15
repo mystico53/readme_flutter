@@ -77,9 +77,14 @@ class GenerateDialogState extends State<GenerateDialog> {
     super.dispose();
   }
 
+  Future<String> _getUserId(BuildContext context) async {
+    final userIdViewModel =
+        Provider.of<UserIdViewModel>(context, listen: false);
+    return userIdViewModel.userId;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final userId = Provider.of<UserIdViewModel>(context).userId;
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -152,12 +157,13 @@ class GenerateDialogState extends State<GenerateDialog> {
                   const SizedBox(width: 10), // Spacing between buttons
                   Consumer<GenerateDialogViewModel>(
                     builder: (context, viewModel, child) => ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        String userId = await _getUserId(context);
                         // Initiate the audio generation process
                         viewModel.generateAndCheckAudio(
                           textController.text,
-                          viewModel.userId,
                           viewModel.currentSelectedVoice,
+                          userId,
                         );
                         // Close the dialog immediately
                         Navigator.pop(context);

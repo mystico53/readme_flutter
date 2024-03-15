@@ -4,9 +4,13 @@ import 'dart:convert';
 import '../utils/app_config.dart';
 
 class FirestoreService {
-  Future<void> createFirestoreDocument(String fileId, String status) async {
+  Future<void> createFirestoreDocument(
+    String fileId,
+    String status,
+    String userId,
+  ) async {
     print(
-        'Attempting to create Firestore document with fileId: $fileId and status: $status'); // Debug before sending request
+        'Attempting to create Firestore document with fileId: $fileId, status: $status, and userId: $userId');
 
     try {
       final response = await http.post(
@@ -15,58 +19,59 @@ class FirestoreService {
         body: jsonEncode({
           'fileId': fileId,
           'status': status,
+          'userId': userId,
         }),
       );
 
-      // Debug print to log the response body. Helpful to understand the response from the server.
       print('Firestore document creation response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Assuming the server returns a success response when a document is created
         print('Document with fileId: $fileId successfully created.');
       } else {
-        // If server response indicates failure (non-200 status code)
         print(
             'Failed to create document with fileId: $fileId. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      // Debug print to log any exceptions encountered during the HTTP request
       print('Exception occurred while creating Firestore document: $e');
     }
   }
 
-  void listenToAudioFileChanges(void Function(DocumentSnapshot) callback) {
-    final audioFilesCollection =
-        FirebaseFirestore.instance.collection('audioFiles');
+  void listenToAudioFileChanges(
+    String userId,
+    void Function(DocumentSnapshot) callback,
+  ) {
+    final audioFilesCollection = FirebaseFirestore.instance
+        .collection('audioFiles')
+        .where('userId', isEqualTo: userId);
 
-    // Debug message to indicate that we're starting to listen to changes
-
-    audioFilesCollection.snapshots().listen((querySnapshot) {
-      // Debug message to indicate that a snapshot has been received
-
-      querySnapshot.docChanges.forEach((change) {
-        // Debug message to log the type of change detected
-
-        if (change.type == DocumentChangeType.added ||
-            change.type == DocumentChangeType.modified) {
-          // Debug message before invoking the callback
-
-          callback(change.doc);
-        }
-      });
-    }, onError: (error) {
-      // Debug message to log any errors encountered during listening
-      print("An error occurred while listening to changes: $error");
-    });
+    audioFilesCollection.snapshots().listen(
+      (querySnapshot) {
+        querySnapshot.docChanges.forEach((change) {
+          if (change.type == DocumentChangeType.added ||
+              change.type == DocumentChangeType.modified) {
+            callback(change.doc);
+          }
+        });
+      },
+      onError: (error) {
+        print("An error occurred while listening to changes: $error");
+      },
+    );
   }
 
   Future<void> updateFirestoreDocumentStatus(
-      String fileId, String status) async {
+    String fileId,
+    String status,
+    String userId,
+  ) async {
     try {
       await FirebaseFirestore.instance
           .collection('audioFiles')
           .doc(fileId)
-          .update({'status': status});
+          .update({
+        'status': status,
+        'userId': userId,
+      });
     } catch (e) {
       print('Error updating Firestore document status: $e');
     }

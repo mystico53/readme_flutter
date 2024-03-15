@@ -9,6 +9,7 @@ class UserIdViewModel with ChangeNotifier {
   // Fetches or creates a new user ID
   Future<void> initUserId() async {
     _userId = await IdManager.getOrCreateUserId();
+    print("userid initialized $_userId");
     notifyListeners(); // Notify listeners about the change
   }
 

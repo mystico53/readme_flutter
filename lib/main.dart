@@ -20,11 +20,19 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
-        ChangeNotifierProvider(create: (context) => GenerateDialogViewModel()),
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),
         // Add other providers here
       ],
-      child: MyApp(),
+      child: Builder(
+        builder: (context) {
+          return ChangeNotifierProvider(
+            create: (context) => GenerateDialogViewModel(
+              Provider.of<UserIdViewModel>(context, listen: false).userId,
+            ),
+            child: MyApp(),
+          );
+        },
+      ),
     ),
   );
 }
@@ -40,7 +48,16 @@ class MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _initializeIntentHandling());
+    Future.microtask(() async {
+      await _initializeUserId();
+      _initializeIntentHandling();
+    });
+  }
+
+  Future<void> _initializeUserId() async {
+    final userIdViewModel =
+        Provider.of<UserIdViewModel>(context, listen: false);
+    await userIdViewModel.initUserId();
   }
 
   void _initializeIntentHandling() {

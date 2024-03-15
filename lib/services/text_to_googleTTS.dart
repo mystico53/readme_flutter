@@ -51,12 +51,24 @@ class TextToGoogleTTS {
     }
   }
 
-  static Future<Map<String, dynamic>> checkTTSStatus(String fileId) async {
+  static Future<Map<String, dynamic>> checkTTSStatus(
+      String fileId, String userId) async {
     var url = AppConfig.checkTTSUrl(fileId);
-    print("Debug: Checking TTS status for fileId: $fileId with URL: $url");
+    print(
+        "Debug: Checking TTS status for fileId: $fileId and userId: $userId with URL: $url");
 
     try {
-      var response = await http.get(url);
+      var response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'fileId': fileId,
+          'userId': userId,
+        }),
+      );
+
       print(
           "Debug: Received status check response with status code: ${response.statusCode}");
 
@@ -67,16 +79,22 @@ class TextToGoogleTTS {
         return {
           'success': true,
           'audioUrl': responseData['gcsUri'],
-          'response': response.body
+          'response': response.body,
         };
       } else {
         print(
             "Debug: Status check failed with reason: ${response.reasonPhrase}");
-        return {'success': false, 'error': 'Error: ${response.reasonPhrase}'};
+        return {
+          'success': false,
+          'error': 'Error: ${response.reasonPhrase}',
+        };
       }
     } catch (e) {
       print("Debug: Exception caught while checking TTS status: $e");
-      return {'success': false, 'error': 'Error calling cloud function: $e'};
+      return {
+        'success': false,
+        'error': 'Error calling cloud function: $e',
+      };
     }
   }
 }
