@@ -119,7 +119,16 @@ class MainScreenState extends State<MainScreen> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         final documents = snapshot.data!.docs;
-                        // Log how many documents were fetched
+                        if (documents.isEmpty) {
+                          return ListTile(
+                            title: Text('Learn how to create your first lisme'),
+                            trailing: Icon(Icons.tips_and_updates),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                  context, '/intropages/intropage_main');
+                            },
+                          );
+                        }
 
                         return ListView.separated(
                           controller: _scrollController,

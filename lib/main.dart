@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:readme_app/intropages/intropage_main.dart';
 import 'services/intent_service.dart';
 import 'view_models/generate_dialog_viewmodel.dart';
 import 'view_models/intent_viewmodel.dart';
@@ -8,6 +9,7 @@ import 'view_models/user_id_viewmodel.dart';
 import 'views/main_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/rendering.dart';
+import '/intropages/intropage_main.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,8 +71,12 @@ class MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MainScreen(), // Assuming MainScreen is the entry screen of your app
+    return MaterialApp(
+      home:
+          const MainScreen(), // Assuming MainScreen is the entry screen of your app
+      routes: {
+        '/intropages/intropage_main': (context) => IntroPageMain(),
+      },
     );
   }
 }
