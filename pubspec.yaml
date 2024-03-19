@@ -1,5 +1,5 @@
 name: readme_app
-description: "A new Flutter project."
+description: "Listen to your texts"
 publish_to: 'none'
 version: 0.1.0+4
 
@@ -36,3 +36,5 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/introslides/
