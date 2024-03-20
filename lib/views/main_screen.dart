@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:feedback/feedback.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
 import '../view_models/user_id_viewmodel.dart';
 import '../views/generate_dialog.dart';
 import '../widgets/audio_player_widget.dart';
-import 'package:intl/intl.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -68,6 +70,22 @@ class MainScreenState extends State<MainScreen> {
     );
   }
 
+  void _showFeedback(BuildContext context) {
+    BetterFeedback.of(context).show((feedback) async {
+      // Save the feedback to Google Cloud Storage
+      final storage = FirebaseStorage.instance;
+      final feedbackRef = storage
+          .ref()
+          .child('feedback/${DateTime.now().millisecondsSinceEpoch}.txt');
+      await feedbackRef.putString(feedback.toString());
+
+      // Show a success message or perform any other actions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Feedback submitted successfully')),
+      );
+    });
+  }
+
   Future<String> _getUserId() async {
     final userIdViewModel =
         Provider.of<UserIdViewModel>(context, listen: false);
@@ -105,6 +123,14 @@ class MainScreenState extends State<MainScreen> {
             height: 1.2,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.feedback),
+            onPressed: () {
+              _showFeedback(context);
+            },
+          ),
+        ],
       ),
       body: Column(
         children: <Widget>[
