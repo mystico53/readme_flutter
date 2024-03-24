@@ -9,7 +9,7 @@ class IntroPage3 extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Try "Select All", Lisme will remove any clutter',
+            'Time to get your feet wet!\n\n Try it with the text below.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 24,
@@ -17,17 +17,17 @@ class IntroPage3 extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20),
-          FractionallySizedBox(
-            widthFactor: 1.0,
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Image.asset(
-                'assets/images/introslides/Intro3.png',
-                fit: BoxFit.contain,
+          Container(
+            padding: EdgeInsets.all(8), // Add padding around the text
+            color: Color(0xFFF0EAD6), // Eggshell background color
+            child: SelectableText(
+              'Step 1. Select ANY word in this textbox.\nStep 2. Press "Select all."\nStep 3. Share with Lisme.\n\nCongratulations. You just learned how to create your first Lisme. Now try it with another text from your phone',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
               ),
             ),
-          ),
-          SizedBox(height: 20),
+          )
         ],
       ),
     );

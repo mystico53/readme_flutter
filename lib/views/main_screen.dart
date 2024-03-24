@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:feedback/feedback.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../services/feedback_service.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
 import '../view_models/user_id_viewmodel.dart';
@@ -72,26 +73,21 @@ class MainScreenState extends State<MainScreen> {
 
   void _showFeedback(BuildContext context) {
     BetterFeedback.of(context).show((feedback) async {
-      // Save the feedback to Google Cloud Storage
-      final storage = FirebaseStorage.instance;
-      final feedbackRef = storage
-          .ref()
-          .child('feedback/${DateTime.now().millisecondsSinceEpoch}.txt');
-      await feedbackRef.putString(feedback.toString());
-
-      // Show a success message or perform any other actions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Feedback submitted successfully')),
-      );
+      try {
+        await FeedbackService.submitFeedback(
+          feedback.text,
+          feedback.screenshot,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Feedback submitted successfully')),
+        );
+      } catch (error) {
+        print('Error submitting feedback: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error submitting feedback')),
+        );
+      }
     });
-  }
-
-  Future<String> _getUserId() async {
-    final userIdViewModel =
-        Provider.of<UserIdViewModel>(context, listen: false);
-    String userId = userIdViewModel.userId;
-    print('User ID for mainscreen: $userId');
-    return userId;
   }
 
   @override
@@ -115,20 +111,18 @@ class MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         backgroundColor: Colors.grey[300],
         title: Text(
-          userIdViewModel.userId.isNotEmpty
-              ? 'Lisme\nUser(${userIdViewModel.userId})'
-              : 'Lisme',
+          'My Lisme Playlist',
           style: TextStyle(
             fontSize: 16,
             height: 1.2,
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.feedback),
+          TextButton(
             onPressed: () {
               _showFeedback(context);
             },
+            child: Text('Give Feedback'),
           ),
         ],
       ),
@@ -168,7 +162,7 @@ class MainScreenState extends State<MainScreen> {
                             final status = data?['status'] as String?;
                             final createdAt = data?['created_at'] as Timestamp?;
                             final formattedCreatedAt = createdAt != null
-                                ? DateFormat('yyyy-MM-dd HH:mm:ss')
+                                ? DateFormat('MMMM d, yyyy, h:mm a')
                                     .format(createdAt.toDate())
                                 : 'endingP';
                             final title = data?['title'] as String?;
@@ -187,7 +181,7 @@ class MainScreenState extends State<MainScreen> {
                                   ),
                                   Row(
                                     children: [
-                                      Text('Created At: $formattedCreatedAt'),
+                                      Text('$formattedCreatedAt'),
                                       SizedBox(width: 8),
                                       IconButton(
                                         icon: Icon(Icons.delete, size: 16),

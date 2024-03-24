@@ -24,6 +24,13 @@ class GenerateDialogViewModel with ChangeNotifier {
   // Clean AI Switch Toggle
   bool get isCleanAIToggled => _isCleanAIToggled;
   bool _isCleanAIToggled = false;
+  bool get iscleanTextToggled => _isCleanTextToggled;
+  bool _isCleanTextToggled = true;
+
+  void toggleCleanText(bool value) {
+    _isCleanTextToggled = value;
+    notifyListeners();
+  }
 
   void toggleCleanAI(bool value) {
     _isCleanAIToggled = value;
@@ -40,7 +47,11 @@ class GenerateDialogViewModel with ChangeNotifier {
     try {
       await FirestoreService()
           .createFirestoreDocument(fileId, 'initiating', userId);
-      text = await ProcessTextService.processRawIntent(text);
+
+      if (_isCleanTextToggled) {
+        text = await ProcessTextService.processRawIntent(text);
+      }
+
       print("Debug: Text from Process Text Service: $text");
       await GenerateTitleService.generateTitle(text, fileId, userId);
 

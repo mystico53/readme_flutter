@@ -38,7 +38,7 @@ class _IntroPageMainState extends State<IntroPageMain> {
             ],
           ),
           Container(
-            alignment: Alignment(0, 0.8),
+            alignment: Alignment(0, 0.9),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

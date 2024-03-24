@@ -17,9 +17,9 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
         voiceName: "en-US-Neural2-J",
         speakingRate: 0.85),
     VoiceModel(
-        name: "US - Gordon (Casual)",
+        name: "US - Gordon (News)",
         languageCode: "en-US",
-        voiceName: "en-US-Casual-K",
+        voiceName: "en-US-News-N",
         speakingRate: 0.9),
     VoiceModel(
         name: "US - Malcolm (Poly)",

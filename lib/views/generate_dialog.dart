@@ -95,7 +95,7 @@ class GenerateDialogState extends State<GenerateDialog> {
             TextField(
               controller: textController,
               scrollController: scrollController,
-              decoration: const InputDecoration(labelText: 'Enter Text'),
+              decoration: const InputDecoration(labelText: 'Turn into speech:'),
               keyboardType: TextInputType.multiline,
               maxLines: 6,
               minLines: 6,
@@ -108,6 +108,7 @@ class GenerateDialogState extends State<GenerateDialog> {
                 },
               ),
             ),
+            /*
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Consumer<GenerateDialogViewModel>(
@@ -117,11 +118,14 @@ class GenerateDialogState extends State<GenerateDialog> {
                 },
               ),
             ),
+            */
+            /*
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  
                   OutlinedButton(
                     onPressed: () {
                       Clipboard.getData(Clipboard.kTextPlain).then((value) {
@@ -154,46 +158,87 @@ class GenerateDialogState extends State<GenerateDialog> {
                     },
                     child: const Icon(Icons.clear),
                   ),
+                  
                   const SizedBox(width: 10), // Spacing between buttons
-                  Consumer<GenerateDialogViewModel>(
-                    builder: (context, viewModel, child) => ElevatedButton(
-                      onPressed: () async {
-                        String userId = await _getUserId(context);
-                        // Initiate the audio generation process
-                        viewModel.generateAndCheckAudio(
-                          textController.text,
-                          viewModel.currentSelectedVoice,
-                          userId,
-                        );
-                        // Close the dialog immediately
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Generate Audio'),
+                ],
+              ),
+            ),
+*/
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Voice:",
+                    style:
+                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(width: 8.0),
+                  Expanded(
+                    child: Container(
+                      // Adjust padding as needed to align the dropdown better
+                      padding: EdgeInsets.only(right: 8.0),
+                      child: VoiceSelectionWidget(
+                        onSelectedVoiceChanged: (VoiceModel voice) {
+                          print("Updating selected voice to: ${voice.name}");
+                          Provider.of<GenerateDialogViewModel>(context,
+                                  listen: false)
+                              .updateSelectedVoice(voice);
+                        },
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            VoiceSelectionWidget(
-              onSelectedVoiceChanged: (VoiceModel voice) {
-                // Use Provider to access the ViewModel and call updateSelectedVoice
-                print("Updating selected voice to: ${voice.name}");
-                Provider.of<GenerateDialogViewModel>(context, listen: false)
-                    .updateSelectedVoice(voice);
-              },
+            const SizedBox(
+                height:
+                    10), // Add some spacing between the dropdown and the switch tile
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SwitchListTile(
+                title: Text("Summarize with AI"),
+                value: Provider.of<GenerateDialogViewModel>(context)
+                    .isCleanAIToggled,
+                onChanged: (bool value) {
+                  Provider.of<GenerateDialogViewModel>(context, listen: false)
+                      .toggleCleanAI(value);
+                },
+              ),
             ),
 
-            const SizedBox(width: 10), // Spacing between buttons
-            SwitchListTile(
-              title: Text("Clean with AI"),
-              value: Provider.of<GenerateDialogViewModel>(context)
-                  .isCleanAIToggled,
-              onChanged: (bool value) {
-                Provider.of<GenerateDialogViewModel>(context, listen: false)
-                    .toggleCleanAI(value);
-              },
-            )
+            const SizedBox(width: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SwitchListTile(
+                title: Text("Clean Text"),
+                value: Provider.of<GenerateDialogViewModel>(context)
+                    .iscleanTextToggled,
+                onChanged: (bool value) {
+                  Provider.of<GenerateDialogViewModel>(context, listen: false)
+                      .toggleCleanText(value);
+                },
+              ),
+            ),
+            Consumer<GenerateDialogViewModel>(
+              builder: (context, viewModel, child) => ElevatedButton(
+                onPressed: () async {
+                  String userId = await _getUserId(context);
+                  // Initiate the audio generation process
+                  viewModel.generateAndCheckAudio(
+                    textController.text,
+                    viewModel.currentSelectedVoice,
+                    userId,
+                  );
+                  // Close the dialog immediately
+                  Navigator.pop(context);
+                },
+                child: const Text('Generate Audio'),
+              ),
+            ),
           ],
         ),
       ),

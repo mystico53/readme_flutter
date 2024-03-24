@@ -9,7 +9,8 @@ class IntroPage1 extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Lisme can only read text\nthat you have selected',
+            'Never miss out on an interesting read again.',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -21,12 +22,20 @@ class IntroPage1 extends StatelessWidget {
             child: AspectRatio(
               aspectRatio: 1,
               child: Image.asset(
-                'assets/images/introslides/Intro1.png',
+                'assets/images/introslides/Intro1.jpg',
                 fit: BoxFit.contain,
               ),
             ),
           ),
           SizedBox(height: 20),
+          Text(
+            'Share text with Lisme and listen to it whenever you are ready.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

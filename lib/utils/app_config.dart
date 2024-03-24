@@ -1,6 +1,6 @@
 class AppConfig {
-  //static const bool isProduction = false; // Local
-  static const bool isProduction = true; // Prod
+  static const bool isProduction = false; // Local
+  //static const bool isProduction = true; // Prod
 
   static Uri get baseUrl {
     return isProduction
@@ -16,6 +16,7 @@ class AppConfig {
       baseUrl.resolve('createFirestoreDocument');
   static Uri get generateTitleUrl => baseUrl.resolve('generateTitle');
   static Uri get processRawIntentUrl => baseUrl.resolve('processRawIntent');
+  static Uri get submitFeedbackUrl => baseUrl.resolve('submitFeedback');
 
   //static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
   static Uri checkTTSUrl(String fileId) {

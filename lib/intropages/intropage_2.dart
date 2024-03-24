@@ -5,29 +5,24 @@ class IntroPage2 extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Then share it with Lisme',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 20),
-          FractionallySizedBox(
-            widthFactor: 1.0,
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Image.asset(
-                'assets/images/introslides/Intro2.png',
-                fit: BoxFit.contain,
+      child: Padding(
+        padding: EdgeInsets.only(top: 60), // Add top padding
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: FractionallySizedBox(
+                widthFactor: 0.8,
+                heightFactor: 0.8,
+                child: Image.asset(
+                  'assets/gifs/lisme select all step by step.gif',
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 20),
-        ],
+            SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
