@@ -24,6 +24,7 @@ dependencies:
   smooth_page_indicator: ^1.1.0
   firebase_storage: ^11.6.10
   google_fonts: ^6.2.1
+  just_audio: ^0.9.36
 
 dev_dependencies:
   flutter_test:

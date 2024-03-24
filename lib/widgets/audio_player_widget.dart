@@ -1,6 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
@@ -15,144 +14,127 @@ class AudioPlayerWidget extends StatefulWidget {
 }
 
 class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
-  late AudioPlayer audioPlayer;
-  Duration totalDuration = Duration();
-  Duration currentPosition = Duration();
-  bool isPlaying = false;
-  bool isSeeking = false;
-  Timer? seekDebounceTimer;
-  bool isAudioInitialized = false;
-  StreamSubscription<Duration>? _positionSubscription;
-  bool isBuffering = false;
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
+  bool _isBuffering = false;
+  bool _isAudioLoaded = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    audioPlayer = AudioPlayer();
-    initAudio();
+    _audioPlayer = AudioPlayer();
+    _initAudio();
   }
 
   @override
   void didUpdateWidget(AudioPlayerWidget oldWidget) {
     if (oldWidget.audioUrl != widget.audioUrl) {
-      initAudio(); // Re-initialize audio if the URL changes
+      _initAudio(); // Re-initialize audio if the URL changes
     }
     super.didUpdateWidget(oldWidget);
   }
 
-  Future<void> initAudio() async {
+  Future<void> _initAudio() async {
     if (widget.audioUrl.isEmpty) {
-      // If the audio URL is empty, set the total duration to zero
       setState(() {
-        totalDuration = Duration.zero;
+        _totalDuration = Duration.zero;
+        _isAudioLoaded = false;
+        _errorMessage = 'Audio URL is empty';
       });
       return;
     }
 
     try {
-      await audioPlayer.setSource(UrlSource(widget.audioUrl));
-      audioPlayer.onDurationChanged.listen((duration) {
+      await _audioPlayer.setUrl(widget.audioUrl);
+      _totalDuration = _audioPlayer.duration ?? Duration.zero;
+
+      _audioPlayer.positionStream.listen((position) {
         setState(() {
-          totalDuration = duration;
+          _currentPosition = position;
         });
       });
 
-      // Cancel any previous position subscription
-      _positionSubscription?.cancel();
-
-      // Subscribe to position changes
-      _positionSubscription = audioPlayer.onPositionChanged.listen((position) {
+      _audioPlayer.playerStateStream.listen((state) {
         setState(() {
-          currentPosition = position;
+          _isPlaying = state.playing;
+          _isBuffering = state.processingState == ProcessingState.buffering;
         });
       });
 
-      audioPlayer.onPlayerStateChanged.listen((state) {
-        if (state == PlayerState.stopped) {
-          setState(() {
-            isPlaying = false;
-            currentPosition = Duration.zero;
-          });
-        } else if (state == PlayerState.playing) {
-          setState(() {
-            isPlaying = true;
-          });
-        } else if (state == PlayerState.paused) {
-          setState(() {
-            isPlaying = false;
-          });
-        } else if (state == PlayerState.completed) {
-          setState(() {
-            isPlaying = false;
-            currentPosition = totalDuration;
-          });
-        }
+      _audioPlayer.processingStateStream.listen((state) {
+        setState(() {
+          _isBuffering = state == ProcessingState.buffering;
+        });
       });
+
       setState(() {
-        isAudioInitialized = true;
+        _isAudioLoaded = true;
+        _errorMessage = '';
       });
     } catch (e) {
       print('Error setting audio source: ${e.toString()}');
-      // Set the total duration to zero if an error occurs
       setState(() {
-        totalDuration = Duration.zero;
+        _totalDuration = Duration.zero;
+        _isAudioLoaded = false;
+        _errorMessage = 'Failed to load audio';
       });
     }
   }
 
   @override
   void dispose() {
-    _positionSubscription?.cancel();
-    audioPlayer.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  String formatDuration(Duration duration) {
+  String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}h ${twoDigitMinutes}m ${twoDigitSeconds}s";
+    return "${twoDigits(duration.inHours)}:${twoDigitMinutes}:${twoDigitSeconds}";
   }
 
-  void seekAudio(double value) async {
-    await audioPlayer.pause();
-    await audioPlayer.seek(Duration(milliseconds: value.toInt()));
-    await audioPlayer.resume();
-    setState(() {
-      currentPosition = Duration(milliseconds: value.toInt());
-    });
+  void _seekAudio(double value) {
+    _audioPlayer.seek(Duration(milliseconds: value.toInt()));
   }
 
-  void jumpBackward() {
-    final newPosition = currentPosition - Duration(seconds: 10);
-    if (newPosition < Duration.zero) {
-      seekAudio(0);
-    } else {
-      seekAudio(newPosition.inMilliseconds.toDouble());
-    }
+  void _jumpBackward() {
+    final newPosition = _currentPosition - Duration(seconds: 10);
+    _seekAudio(newPosition < Duration.zero
+        ? 0
+        : newPosition.inMilliseconds.toDouble());
   }
 
-  void jumpForward() {
-    final newPosition = currentPosition + Duration(seconds: 10);
-    if (newPosition > totalDuration) {
-      seekAudio(totalDuration.inMilliseconds.toDouble());
-    } else {
-      seekAudio(newPosition.inMilliseconds.toDouble());
-    }
+  void _jumpForward() {
+    final newPosition = _currentPosition + Duration(seconds: 10);
+    _seekAudio(newPosition > _totalDuration
+        ? _totalDuration.inMilliseconds.toDouble()
+        : newPosition.inMilliseconds.toDouble());
   }
 
   @override
   Widget build(BuildContext context) {
-    String totalDurationString = formatDuration(totalDuration);
-    String currentPositionString = formatDuration(currentPosition);
-    bool isAudioLoaded = totalDuration != Duration.zero;
+    String totalDurationString = _formatDuration(_totalDuration);
+    String currentPositionString = _formatDuration(_currentPosition);
+
+    double currentPositionValue = _currentPosition.inMilliseconds.toDouble();
+    double totalDurationValue = _totalDuration.inMilliseconds.toDouble();
+    currentPositionValue = currentPositionValue.clamp(0.0, totalDurationValue);
 
     return Container(
       color: Colors.grey[200],
       padding: EdgeInsets.all(16.0),
       child: Column(
         children: [
-          if (isBuffering) CircularProgressIndicator() else SizedBox.shrink(),
+          if (_isBuffering)
+            LinearProgressIndicator()
+          else if (!_isAudioLoaded)
+            Text(_errorMessage)
+          else
+            SizedBox.shrink(),
           SizedBox(height: 10),
           Text(
             widget.audioTitle,
@@ -162,18 +144,16 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             ),
           ),
           SizedBox(height: 10),
-          isAudioLoaded
+          _isAudioLoaded
               ? Row(
                   children: [
                     Text(currentPositionString),
                     Expanded(
                       child: Slider(
-                        value: currentPosition.inMilliseconds.toDouble(),
+                        value: currentPositionValue,
                         min: 0.0,
-                        max: totalDuration.inMilliseconds.toDouble(),
-                        onChanged: (double value) {
-                          seekAudio(value);
-                        },
+                        max: totalDurationValue,
+                        onChanged: _seekAudio,
                       ),
                     ),
                     Text(totalDurationString),
@@ -186,55 +166,39 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             children: [
               IconButton(
                 onPressed: () async {
-                  try {
-                    await audioPlayer.stop();
-                    await audioPlayer.release();
-                    setState(() {
-                      isPlaying = false;
-                      currentPosition = Duration.zero;
-                      isAudioInitialized = false;
-                    });
-                    await initAudio(); // Reinitialize the audio player
-                  } catch (e) {
-                    print('Error stopping audio: ${e.toString()}');
-                    // Handle the error and show an appropriate message to the user
-                  }
+                  await _audioPlayer.stop();
+                  await _audioPlayer.seek(Duration.zero);
+                  setState(() {
+                    _isPlaying = false;
+                    _currentPosition = Duration.zero;
+                  });
                 },
                 icon: Icon(Icons.stop),
               ),
               SizedBox(width: 10),
               IconButton(
-                onPressed: jumpBackward,
+                onPressed: _jumpBackward,
                 icon: Icon(Icons.replay_10),
               ),
               SizedBox(width: 10),
               IconButton(
                 onPressed: () async {
-                  try {
-                    if (isPlaying) {
-                      await audioPlayer.pause();
-                      setState(() {
-                        isPlaying = false;
-                      });
-                    } else {
-                      if (!isAudioInitialized) {
-                        await initAudio();
-                      }
-                      await audioPlayer.resume();
-                      setState(() {
-                        isPlaying = true;
-                      });
+                  if (_isPlaying) {
+                    await _audioPlayer.pause();
+                  } else {
+                    try {
+                      await _audioPlayer.play();
+                    } catch (e) {
+                      print('Error playing audio: ${e.toString()}');
+                      // Handle the error and show an appropriate message to the user
                     }
-                  } catch (e) {
-                    print('Error playing/pausing audio: ${e.toString()}');
-                    // Handle the error and show an appropriate message to the user
                   }
                 },
-                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               ),
               SizedBox(width: 10),
               IconButton(
-                onPressed: jumpForward,
+                onPressed: _jumpForward,
                 icon: Icon(Icons.forward_10),
               ),
             ],
