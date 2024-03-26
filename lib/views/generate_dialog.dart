@@ -4,7 +4,6 @@ import '../models/voice_model.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
 import 'dart:async';
-import 'package:flutter/services.dart';
 import '../view_models/user_id_viewmodel.dart';
 import '../widgets/voice_selection_widget.dart';
 
@@ -16,8 +15,6 @@ class GenerateDialog extends StatefulWidget {
 }
 
 class GenerateDialogState extends State<GenerateDialog> {
-  // Add your state variables here if needed
-  //VoiceModel? _currentSelectedVoice;
   final textController = TextEditingController();
   final scrollController = ScrollController();
   String audioUrl = '';
@@ -27,16 +24,13 @@ class GenerateDialogState extends State<GenerateDialog> {
   void initState() {
     super.initState();
 
-    // Accessing IntentViewModel from the dialog's build context
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.addListener(() {
-      // This ensures we're not calling setState during the build phase.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
             textController.text =
-                //intentViewModel.sharedFiles.map((file) => file.path).join(", ");
                 intentViewModel.sharedFiles.map((file) => file.path).join("\n");
           });
         }
@@ -44,30 +38,21 @@ class GenerateDialogState extends State<GenerateDialog> {
     });
 
     textController.addListener(() {
-      // Update the character count in the view model
       Provider.of<GenerateDialogViewModel>(context, listen: false)
           .updateCharacterCount(textController.text.length);
     });
 
-    // Immediately check if there are any shared files
     if (intentViewModel.sharedFiles.isNotEmpty) {
-      // If there are shared files, update the dialog's state accordingly
-
-      // For example, you might want to prepopulate some UI elements with this data
-      // This is just an example, replace it with your actual logic
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
-            // Assuming you have a TextEditingController for displaying the file paths
             textController.text =
-                //intentViewModel.sharedFiles.map((file) => file.path).join(", ");
                 intentViewModel.sharedFiles.map((file) => file.path).join("\n");
           });
         }
       });
     } else {
       print("No shared files are available.");
-      // Handle the case where no shared files are available
     }
   }
 
@@ -86,160 +71,165 @@ class GenerateDialogState extends State<GenerateDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            TextField(
-              controller: textController,
-              scrollController: scrollController,
-              decoration: const InputDecoration(labelText: 'Turn into speech:'),
-              keyboardType: TextInputType.multiline,
-              maxLines: 6,
-              minLines: 6,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Consumer<GenerateDialogViewModel>(
-                builder: (context, viewModel, child) {
-                  return Text('Character Count: ${viewModel.characterCount}');
-                },
+      backgroundColor: Color(0xFFFFEFC3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Text(
+                'Create your Lisme',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4B473D),
+                ),
               ),
-            ),
-            /*
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Consumer<GenerateDialogViewModel>(
-                builder: (context, viewModel, child) {
-                  return Text(
-                      'Estimated Costs: \$${viewModel.calculateEstimatedCost()}');
-                },
+              const SizedBox(height: 16),
+              Container(
+                constraints: BoxConstraints(
+                  minHeight: 50.0, // Minimum height for the TextField
+                  maxHeight: 200.0, // Maximum height for the TextField
+                ),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Color(0xFF4B473D),
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.zero,
+                ),
+                child: TextField(
+                  controller: textController,
+                  scrollController: scrollController,
+                  style: const TextStyle(color: Color(0xFF4B473D)),
+                  decoration: const InputDecoration(
+                    labelText: 'Selected text:',
+                    labelStyle: TextStyle(color: Color(0xFF4B473D)),
+                    border: InputBorder.none,
+                  ),
+                  keyboardType: TextInputType.multiline,
+                  maxLines: null,
+                ),
               ),
-            ),
-            */
-            /*
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  
-                  OutlinedButton(
-                    onPressed: () {
-                      Clipboard.getData(Clipboard.kTextPlain).then((value) {
-                        // Get current text from the controller
-                        String currentText = textController.text;
-                        // Append the clipboard text to the current text
-                        String newText = currentText + (value?.text ?? '');
-                        // Update the controller with the new text
-                        textController.text = newText;
-                        // Set the cursor at the end of the new text
-                        textController.selection = TextSelection.fromPosition(
-                            TextPosition(offset: newText.length));
-
-                        // Scroll to the bottom of the TextField
-                        Future.delayed(const Duration(milliseconds: 100), () {
-                          scrollController.animateTo(
-                            scrollController.position.maxScrollExtent,
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeOut,
-                          );
-                        });
-                      });
-                    },
-                    child: const Icon(Icons.paste),
-                  ),
-                  const SizedBox(width: 10), // Spacing between buttons
-                  OutlinedButton(
-                    onPressed: () {
-                      textController.clear();
-                    },
-                    child: const Icon(Icons.clear),
-                  ),
-                  
-                  const SizedBox(width: 10), // Spacing between buttons
-                ],
+              Padding(
+                padding: const EdgeInsets.all(1.0),
+                child: Consumer<GenerateDialogViewModel>(
+                  builder: (context, viewModel, child) {
+                    return Text(
+                      'Character Count: ${viewModel.characterCount}',
+                      style: const TextStyle(color: Color(0xFF4B473D)),
+                    );
+                  },
+                ),
               ),
-            ),
-*/
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Voice:",
-                    style:
-                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 8.0),
-                  Expanded(
-                    child: Container(
-                      // Adjust padding as needed to align the dropdown better
-                      padding: EdgeInsets.only(right: 8.0),
-                      child: VoiceSelectionWidget(
-                        onSelectedVoiceChanged: (VoiceModel voice) {
-                          print("Updating selected voice to: ${voice.name}");
-                          Provider.of<GenerateDialogViewModel>(context,
-                                  listen: false)
-                              .updateSelectedVoice(voice);
-                        },
-                      ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          "Select Voice:",
+                          style: TextStyle(
+                            color: Color(0xFF4B473D),
+                          ),
+                        ),
+                        const Spacer(),
+                        Expanded(
+                          child: VoiceSelectionWidget(
+                            onSelectedVoiceChanged: (VoiceModel voice) {
+                              print(
+                                  "Updating selected voice to: ${voice.name}");
+                              Provider.of<GenerateDialogViewModel>(context,
+                                      listen: false)
+                                  .updateSelectedVoice(voice);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 16.0),
+                    Row(
+                      children: [
+                        const Text(
+                          "Summarize with AI",
+                          style: TextStyle(color: Color(0xFF4B473D)),
+                        ),
+                        const Spacer(),
+                        Checkbox(
+                          value: Provider.of<GenerateDialogViewModel>(context)
+                              .isCleanAIToggled,
+                          onChanged: (bool? value) {
+                            Provider.of<GenerateDialogViewModel>(context,
+                                    listen: false)
+                                .toggleCleanAI(value ?? false);
+                          },
+                          activeColor: const Color(0xFF4B473D),
+                          checkColor: const Color(0xFFFFEFC3),
+                          side: const BorderSide(
+                            color: Color(0xFF4B473D),
+                            width: 2.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                    Row(
+                      children: [
+                        const Text(
+                          "Clean Text",
+                          style: TextStyle(color: Color(0xFF4B473D)),
+                        ),
+                        const Spacer(),
+                        Checkbox(
+                          value: Provider.of<GenerateDialogViewModel>(context)
+                              .iscleanTextToggled,
+                          onChanged: (bool? value) {
+                            Provider.of<GenerateDialogViewModel>(context,
+                                    listen: false)
+                                .toggleCleanText(value ?? false);
+                          },
+                          activeColor: const Color(0xFF4B473D),
+                          checkColor: const Color(0xFFFFEFC3),
+                          side: const BorderSide(
+                            color: Color(0xFF4B473D),
+                            width: 2.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Consumer<GenerateDialogViewModel>(
+                builder: (context, viewModel, child) => ElevatedButton(
+                  onPressed: () async {
+                    String userId = await _getUserId(context);
+                    viewModel.generateAndCheckAudio(
+                      textController.text,
+                      viewModel.currentSelectedVoice,
+                      userId,
+                    );
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFFFFEFC3),
+                    backgroundColor: const Color(0xFF4B473D),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero),
                   ),
-                ],
+                  child: const Text('Create'),
+                ),
               ),
-            ),
-
-            const SizedBox(
-                height:
-                    10), // Add some spacing between the dropdown and the switch tile
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SwitchListTile(
-                title: Text("Summarize with AI"),
-                value: Provider.of<GenerateDialogViewModel>(context)
-                    .isCleanAIToggled,
-                onChanged: (bool value) {
-                  Provider.of<GenerateDialogViewModel>(context, listen: false)
-                      .toggleCleanAI(value);
-                },
-              ),
-            ),
-
-            const SizedBox(width: 30),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SwitchListTile(
-                title: Text("Clean Text"),
-                value: Provider.of<GenerateDialogViewModel>(context)
-                    .iscleanTextToggled,
-                onChanged: (bool value) {
-                  Provider.of<GenerateDialogViewModel>(context, listen: false)
-                      .toggleCleanText(value);
-                },
-              ),
-            ),
-            Consumer<GenerateDialogViewModel>(
-              builder: (context, viewModel, child) => ElevatedButton(
-                onPressed: () async {
-                  String userId = await _getUserId(context);
-                  // Initiate the audio generation process
-                  viewModel.generateAndCheckAudio(
-                    textController.text,
-                    viewModel.currentSelectedVoice,
-                    userId,
-                  );
-                  // Close the dialog immediately
-                  Navigator.pop(context);
-                },
-                child: const Text('Generate Audio'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

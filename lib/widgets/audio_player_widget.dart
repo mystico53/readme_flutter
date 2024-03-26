@@ -42,7 +42,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       setState(() {
         _totalDuration = Duration.zero;
         _isAudioLoaded = false;
-        _errorMessage = 'Audio URL is empty';
+        _errorMessage = 'Select or create a Lisme';
       });
       return;
     }
@@ -125,14 +125,17 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     currentPositionValue = currentPositionValue.clamp(0.0, totalDurationValue);
 
     return Container(
-      color: Colors.grey[200],
+      color: Color(0xFF4B473D),
       padding: EdgeInsets.all(16.0),
       child: Column(
         children: [
           if (_isBuffering)
             LinearProgressIndicator()
           else if (!_isAudioLoaded)
-            Text(_errorMessage)
+            Text(
+              _errorMessage,
+              style: TextStyle(color: Color(0xFFFFEFC3)),
+            )
           else
             SizedBox.shrink(),
           SizedBox(height: 10),
@@ -141,22 +144,31 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
+              color: Color(0xFFFFEFC3),
             ),
           ),
           SizedBox(height: 10),
           _isAudioLoaded
               ? Row(
                   children: [
-                    Text(currentPositionString),
+                    Text(
+                      currentPositionString,
+                      style: TextStyle(color: Color(0xFFFFEFC3)),
+                    ),
                     Expanded(
                       child: Slider(
                         value: currentPositionValue,
                         min: 0.0,
                         max: totalDurationValue,
                         onChanged: _seekAudio,
+                        activeColor: Color(0xFFFFEFC3),
+                        inactiveColor: Color(0xFFFFEFC3).withOpacity(0.3),
                       ),
                     ),
-                    Text(totalDurationString),
+                    Text(
+                      totalDurationString,
+                      style: TextStyle(color: Color(0xFFFFEFC3)),
+                    ),
                   ],
                 )
               : Container(),
@@ -173,12 +185,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     _currentPosition = Duration.zero;
                   });
                 },
-                icon: Icon(Icons.stop),
+                icon: Icon(Icons.stop, color: Color(0xFFFFEFC3)),
               ),
               SizedBox(width: 10),
               IconButton(
                 onPressed: _jumpBackward,
-                icon: Icon(Icons.replay_10),
+                icon: Icon(Icons.replay_10, color: Color(0xFFFFEFC3)),
               ),
               SizedBox(width: 10),
               IconButton(
@@ -194,12 +206,13 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     }
                   }
                 },
-                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Color(0xFFFFEFC3)),
               ),
               SizedBox(width: 10),
               IconButton(
                 onPressed: _jumpForward,
-                icon: Icon(Icons.forward_10),
+                icon: Icon(Icons.forward_10, color: Color(0xFFFFEFC3)),
               ),
             ],
           ),

@@ -76,15 +76,17 @@ class MyAppState extends State<MyApp> {
     return BetterFeedback(
       child: MaterialApp(
         theme: ThemeData(
-          // Define the default brightness and colors.
           scaffoldBackgroundColor: Color(0xFFFFEFC3),
-          textTheme: GoogleFonts.dosisTextTheme(
-            Theme.of(context)
-                .textTheme, // This ensures that VT323 is applied on top of the current theme
-          ), // Custom color for background
+          textTheme: GoogleFonts.hindTextTheme(
+            Theme.of(context).textTheme,
+          ).apply(
+            // Applying a color to all text styles within the text theme
+            bodyColor: Color(0xFF4B473D), // Set the default text color
+            displayColor:
+                Color(0xFF4B473D), // Used for headings and other display texts
+          ),
         ),
-        home:
-            const MainScreen(), // Assuming MainScreen is the entry screen of your app
+        home: const MainScreen(),
         routes: {
           '/intropages/intropage_main': (context) => IntroPageMain(),
         },

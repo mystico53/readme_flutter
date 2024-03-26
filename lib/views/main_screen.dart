@@ -109,12 +109,13 @@ class MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.grey[300],
+        backgroundColor: Color(0xFF4B473D),
         title: Text(
-          'My Lisme Playlist',
+          'Lisme',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 32,
             height: 1.2,
+            color: Color(0xFFFFEFC3),
           ),
         ),
         actions: [
@@ -122,7 +123,10 @@ class MainScreenState extends State<MainScreen> {
             onPressed: () {
               _showFeedback(context);
             },
-            child: Text('Give Feedback'),
+            child: Text(
+              'Give Feedback',
+              style: TextStyle(color: Color(0xFFFFEFC3)),
+            ),
           ),
         ],
       ),
