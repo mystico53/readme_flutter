@@ -46,21 +46,22 @@ class GenerateDialogViewModel with ChangeNotifier {
 
     try {
       await FirestoreService()
-          .createFirestoreDocument(fileId, 'initiating', userId);
+          .createFirestoreDocument(fileId, 'initiating file', userId);
 
       if (_isCleanTextToggled) {
+        await FirestoreService()
+            .updateFirestoreDocumentStatus(fileId, 'processing text', userId);
         text = await ProcessTextService.processRawIntent(text);
       }
 
-      print("Debug: Text from Process Text Service: $text");
+      await FirestoreService()
+          .updateFirestoreDocumentStatus(fileId, 'generating title', userId);
       await GenerateTitleService.generateTitle(text, fileId, userId);
 
       if (_isCleanAIToggled) {
         await FirestoreService()
-            .updateFirestoreDocumentStatus(fileId, 'cleaning', userId);
+            .updateFirestoreDocumentStatus(fileId, 'summarizing', userId);
         text = await CleanTextService.cleanText(text);
-        await FirestoreService()
-            .updateFirestoreDocumentStatus(fileId, 'cleaned', userId);
       }
 
       print('Sending text to server:');
@@ -69,6 +70,8 @@ class GenerateDialogViewModel with ChangeNotifier {
       print(' Selected Voice: ${selectedVoice?.name ?? 'Default'}');
       print(' File ID: $fileId');
 
+      await FirestoreService()
+          .updateFirestoreDocumentStatus(fileId, 'generating speech', userId);
       var sendResult = await TextToGoogleTTS.sendTextToServer(
         text,
         userId,
@@ -81,23 +84,25 @@ class GenerateDialogViewModel with ChangeNotifier {
         print(' Server responded with an error');
         _response = sendResult['error'] ?? 'Failed to send text to server.';
         await FirestoreService().updateFirestoreDocumentStatus(
-            fileId, 'error, no text sent', userId);
+            fileId, 'error, couldnt send text', userId);
       }
 
       if (sendResult['success']) {
         var checkResult = await TextToGoogleTTS.checkTTSStatus(fileId, userId);
         if (checkResult['success']) {
+          await FirestoreService()
+              .updateFirestoreDocumentStatus(fileId, 'ready', userId);
           _response = checkResult['response'];
         } else {
           _response = checkResult['error'];
-          await FirestoreService()
-              .updateFirestoreDocumentStatus(fileId, 'error', userId);
+          await FirestoreService().updateFirestoreDocumentStatus(
+              fileId, 'error, generating speech unsuccesful', userId);
         }
       }
     } catch (e) {
       _response = 'Error during text-to-speech processing: $e';
-      await FirestoreService()
-          .updateFirestoreDocumentStatus(fileId, 'error', userId);
+      await FirestoreService().updateFirestoreDocumentStatus(
+          fileId, 'Error during text-to-speech processing', userId);
     } finally {
       notifyListeners();
     }

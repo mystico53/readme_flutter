@@ -176,12 +176,29 @@ class MainScreenState extends State<MainScreen> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Status: ${status ?? 'Preparing'}',
-                                    style: TextStyle(
-                                      color:
-                                          status == 'error' ? Colors.red : null,
-                                    ),
+                                  Row(
+                                    children: [
+                                      if (status != 'ready')
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8.0),
+                                          child: SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        'Status: ${status ?? 'Preparing'}',
+                                        style: TextStyle(
+                                          color: status == 'error'
+                                              ? Colors.red
+                                              : null,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Row(
                                     children: [
@@ -190,7 +207,6 @@ class MainScreenState extends State<MainScreen> {
                                       IconButton(
                                         icon: Icon(Icons.delete, size: 16),
                                         onPressed: () async {
-                                          // Log the deletion of a document
                                           print(
                                               "Deleting document with ID: $fileId");
                                           await FirebaseFirestore.instance
@@ -201,6 +217,15 @@ class MainScreenState extends State<MainScreen> {
                                       ),
                                     ],
                                   ),
+                                  SizedBox(height: 4),
+                                  if (status != 'ready')
+                                    LinearProgressIndicator(
+                                      value: calculateProgress(status),
+                                      backgroundColor: Colors.grey[300],
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.blue),
+                                    ),
+                                  SizedBox(height: 4),
                                 ],
                               ),
                               trailing: status == 'ready'
@@ -252,5 +277,16 @@ class MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  double calculateProgress(String? status) {
+    if (status == 'initiating file') return 0.1;
+    if (status == 'processing text') return 0.2;
+    if (status == 'generating title') return 0.4;
+    if (status == 'summarizing') return 0.45;
+    if (status == 'preparing speech service') return 0.5;
+    if (status == 'generating speech') return 0.7;
+    if (status == 'ready') return 1.0;
+    return 0.0;
   }
 }

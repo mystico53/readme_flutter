@@ -12,10 +12,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter/rendering.dart';
 import '/intropages/intropage_main.dart';
 import 'package:feedback/feedback.dart';
+import '../view_models/main_screen_view_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
+
   runApp(
     MultiProvider(
       providers: [
@@ -25,6 +27,14 @@ void main() async {
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),
+        // Retrieve the userId from UserIdViewModel
+        ChangeNotifierProvider(
+          create: (context) {
+            final userIdViewModel =
+                Provider.of<UserIdViewModel>(context, listen: false);
+            return MainScreenViewModel(userIdViewModel.userId);
+          },
+        ),
         // Add other providers here
       ],
       child: Builder(
