@@ -25,6 +25,7 @@ class MainScreenState extends State<MainScreen> {
   String userId = '';
   String sharedContent = "";
   bool isDialogOpen = false;
+  String selectedFileId = '';
 
   @override
   void initState() {
@@ -88,6 +89,17 @@ class MainScreenState extends State<MainScreen> {
         );
       }
     });
+  }
+
+  Future<void> _syncProgressWithFirestore(String fileId, int progress) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('audioFiles')
+          .doc(fileId)
+          .update({'progress': progress});
+    } catch (e) {
+      print('Error syncing progress with Firestore: ${e.toString()}');
+    }
   }
 
   @override
@@ -170,6 +182,8 @@ class MainScreenState extends State<MainScreen> {
                                     .format(createdAt.toDate())
                                 : 'endingP';
                             final title = data?['title'] as String?;
+                            final progress = data?['progress'] ?? 0;
+                            final progressPercentage = progress / 1000;
 
                             return ListTile(
                               title: Text(title ?? 'New Lisme is created'),
@@ -198,6 +212,10 @@ class MainScreenState extends State<MainScreen> {
                                               : null,
                                         ),
                                       ),
+                                      /*
+                                      SizedBox(height: 4),
+                                      Text(
+                                          'Progress: ${progressPercentage.toStringAsFixed(2)}%'),*/
                                     ],
                                   ),
                                   Row(
@@ -245,6 +263,7 @@ class MainScreenState extends State<MainScreen> {
                                             setState(() {
                                               selectedAudioUrl = httpsUrl;
                                               selectedAudioTitle = title;
+                                              selectedFileId = fileId;
                                             });
                                           } else {
                                             print(
@@ -273,6 +292,9 @@ class MainScreenState extends State<MainScreen> {
           AudioPlayerWidget(
             audioUrl: selectedAudioUrl,
             audioTitle: selectedAudioTitle,
+            fileId: selectedFileId,
+            onProgressChanged: (progress) =>
+                _syncProgressWithFirestore(selectedFileId, progress),
           ),
         ],
       ),
