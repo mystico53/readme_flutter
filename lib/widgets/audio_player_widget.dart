@@ -40,6 +40,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   @override
   void didUpdateWidget(AudioPlayerWidget oldWidget) {
     if (oldWidget.audioUrl != widget.audioUrl) {
+      _saveProgress();
       _initAudio(); // Re-initialize audio if the URL changes
     }
     super.didUpdateWidget(oldWidget);
@@ -61,7 +62,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
       // Retrieve the stored progress from shared preferences
       final prefs = await SharedPreferences.getInstance();
-      final storedProgress = prefs.getInt('${widget.audioUrl}_progress') ?? 0;
+      final storedProgress = prefs.getInt('${widget.fileId}_progress') ?? 0;
       _furthestPosition = Duration(milliseconds: storedProgress);
 
       // Jump to the furthest position
@@ -121,12 +122,13 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
     if (currentProgress > _furthestPosition.inMilliseconds) {
       _furthestPosition = Duration(milliseconds: currentProgress);
-      await prefs.setInt('${widget.audioUrl}_progress', currentProgress);
+      await prefs.setInt('${widget.fileId}_progress', currentProgress);
     }
   }
 
   @override
   void dispose() {
+    _saveProgress();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -296,6 +298,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     await _audioPlayer.pause();
                   } else {
                     try {
+                      await _audioPlayer.seek(_furthestPosition);
                       await _audioPlayer.play();
                     } catch (e) {
                       print('Error playing audio: ${e.toString()}');
