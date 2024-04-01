@@ -60,6 +60,11 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       await _audioPlayer.setUrl(widget.audioUrl);
       _totalDuration = _audioPlayer.duration ?? Duration.zero;
 
+      setState(() {
+        _isAudioLoaded = true;
+        _errorMessage = '';
+      });
+
       // Retrieve the stored progress from shared preferences
       final prefs = await SharedPreferences.getInstance();
       final storedProgress = prefs.getInt('${widget.fileId}_progress') ?? 0;
@@ -67,11 +72,21 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
       // Jump to the furthest position
       await _audioPlayer.seek(_furthestPosition);
-      _currentPosition = _furthestPosition;
+      setState(() {
+        _currentPosition = _furthestPosition;
+        _isPlaying =
+            _furthestPosition.inMilliseconds < _totalDuration.inMilliseconds;
+      });
+      if (_isPlaying) {
+        await _audioPlayer.play();
+      }
 
       // Autoplay the audio if it's not already playing
       if (!_isPlaying) {
         await _audioPlayer.play();
+        setState(() {
+          _isPlaying = true;
+        });
       }
 
       _audioPlayer.positionStream.listen((position) {
@@ -101,11 +116,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           _isBuffering = state == ProcessingState.buffering;
         });
       });
-
-      setState(() {
-        _isAudioLoaded = true;
-        _errorMessage = '';
-      });
     } catch (e) {
       print('Error setting audio source: ${e.toString()}');
       setState(() {
@@ -123,6 +133,8 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     if (currentProgress > _furthestPosition.inMilliseconds) {
       _furthestPosition = Duration(milliseconds: currentProgress);
       await prefs.setInt('${widget.fileId}_progress', currentProgress);
+    } else if (_furthestPosition == Duration.zero) {
+      await prefs.remove('${widget.fileId}_progress');
     }
   }
 
@@ -275,16 +287,28 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
-                onPressed: () async {
+              GestureDetector(
+                onLongPress: () async {
                   await _audioPlayer.stop();
                   await _audioPlayer.seek(Duration.zero);
                   setState(() {
                     _isPlaying = false;
                     _currentPosition = Duration.zero;
+                    _furthestPosition = Duration.zero;
                   });
+                  await _saveProgress();
                 },
-                icon: Icon(Icons.stop, color: Color(0xFFFFEFC3)),
+                child: IconButton(
+                  onPressed: () async {
+                    await _audioPlayer.stop();
+                    await _audioPlayer.seek(Duration.zero);
+                    setState(() {
+                      _isPlaying = false;
+                      _currentPosition = Duration.zero;
+                    });
+                  },
+                  icon: Icon(Icons.stop, color: Color(0xFFFFEFC3)),
+                ),
               ),
               SizedBox(width: 10),
               IconButton(
@@ -296,10 +320,16 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 onPressed: () async {
                   if (_isPlaying) {
                     await _audioPlayer.pause();
+                    setState(() {
+                      _isPlaying = false;
+                    });
                   } else {
                     try {
                       await _audioPlayer.seek(_furthestPosition);
                       await _audioPlayer.play();
+                      setState(() {
+                        _isPlaying = true;
+                      });
                     } catch (e) {
                       print('Error playing audio: ${e.toString()}');
                       // Handle the error and show an appropriate message to the user
