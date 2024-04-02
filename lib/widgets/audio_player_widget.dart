@@ -42,8 +42,10 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     if (oldWidget.audioUrl != widget.audioUrl) {
       _saveProgress();
       _initAudio(); // Re-initialize audio if the URL changes
+      print("init audio triggered");
     }
     super.didUpdateWidget(oldWidget);
+    print("did update, playing: $_isPlaying");
   }
 
   Future<void> _initAudio() async {
@@ -60,10 +62,21 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       await _audioPlayer.setUrl(widget.audioUrl);
       _totalDuration = _audioPlayer.duration ?? Duration.zero;
 
+      _audioPlayer.positionStream.listen((position) {
+        setState(() {
+          _currentPosition = position;
+        });
+        widget.onProgressChanged(_currentPosition.inMilliseconds);
+      });
+
       setState(() {
         _isAudioLoaded = true;
         _errorMessage = '';
+        _isPlaying = true;
       });
+
+      print(
+          "inside init audio: audio loaded $_isAudioLoaded, playing: $_isPlaying");
 
       // Retrieve the stored progress from shared preferences
       final prefs = await SharedPreferences.getInstance();
@@ -74,32 +87,24 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       await _audioPlayer.seek(_furthestPosition);
       setState(() {
         _currentPosition = _furthestPosition;
-        _isPlaying =
-            _furthestPosition.inMilliseconds < _totalDuration.inMilliseconds;
       });
       if (_isPlaying) {
         await _audioPlayer.play();
+        print(
+            "init audio starting audioplayer, is playing (should be true): $_isPlaying");
       }
 
       // Autoplay the audio if it's not already playing
       if (!_isPlaying) {
         await _audioPlayer.play();
-        setState(() {
-          _isPlaying = true;
-        });
       }
-
-      _audioPlayer.positionStream.listen((position) {
-        setState(() {
-          _currentPosition = position;
-        });
-        widget.onProgressChanged(_currentPosition.inMilliseconds);
-      });
 
       _audioPlayer.playerStateStream.listen((state) {
         setState(() {
           _isPlaying = state.playing;
           _isBuffering = state.processingState == ProcessingState.buffering;
+          print(
+              "getting playerstate stream, isplaying: $_isPlaying, is buffering: $_isBuffering ");
         });
 
         if (!state.playing) {
@@ -112,6 +117,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       });
 
       _audioPlayer.processingStateStream.listen((state) {
+        print("Debug: Processing state changed to $state");
         setState(() {
           _isBuffering = state == ProcessingState.buffering;
         });
@@ -324,17 +330,19 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                       _isPlaying = false;
                     });
                   } else {
-                    try {
-                      await _audioPlayer.seek(_furthestPosition);
-                      await _audioPlayer.play();
+                    if (_currentPosition >= _totalDuration) {
+                      await _audioPlayer.seek(Duration.zero);
                       setState(() {
-                        _isPlaying = true;
+                        _currentPosition = Duration.zero;
                       });
-                    } catch (e) {
-                      print('Error playing audio: ${e.toString()}');
-                      // Handle the error and show an appropriate message to the user
                     }
+                    await _audioPlayer.play();
+                    setState(() {
+                      _isPlaying = true;
+                    });
                   }
+                  print(
+                      "play press: playing: $_isPlaying, audioloaded: $_isAudioLoaded ");
                 },
                 icon: Icon(
                   _isPlaying ? Icons.pause : Icons.play_arrow,
