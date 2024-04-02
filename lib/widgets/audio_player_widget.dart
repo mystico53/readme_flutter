@@ -65,8 +65,16 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       _audioPlayer.positionStream.listen((position) {
         setState(() {
           _currentPosition = position;
+          if (position > _furthestPosition) {
+            _furthestPosition = position;
+            if (_totalDuration.inMilliseconds > 0) {
+              double progress = (_furthestPosition.inMilliseconds /
+                      _totalDuration.inMilliseconds) *
+                  100;
+              widget.onProgressChanged(progress.toInt());
+            }
+          }
         });
-        widget.onProgressChanged(_currentPosition.inMilliseconds);
       });
 
       setState(() {
@@ -231,7 +239,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           ),
           SizedBox(height: 10),
           Text(
-            'Progress: ${progress.toStringAsFixed(2)}%',
+            'Progress: ${progress.toStringAsFixed(1)}%',
             style: TextStyle(color: Color(0xFFFFEFC3)),
           ),
           SizedBox(height: 10),
@@ -253,7 +261,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                             data: SliderTheme.of(context).copyWith(
                               trackHeight: 4,
                               thumbShape: RoundSliderThumbShape(
-                                enabledThumbRadius: 0,
+                                enabledThumbRadius: 3,
                               ),
                               activeTrackColor: Color(0xFFFFEFC3),
                               inactiveTrackColor: Color(0xFFFFEFC3),
@@ -322,31 +330,41 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 icon: Icon(Icons.replay_10, color: Color(0xFFFFEFC3)),
               ),
               SizedBox(width: 10),
-              IconButton(
-                onPressed: () async {
-                  if (_isPlaying) {
-                    await _audioPlayer.pause();
-                    setState(() {
-                      _isPlaying = false;
-                    });
-                  } else {
-                    if (_currentPosition >= _totalDuration) {
-                      await _audioPlayer.seek(Duration.zero);
+              GestureDetector(
+                onLongPress: () async {
+                  await _audioPlayer.seek(_furthestPosition);
+                  setState(() {
+                    _currentPosition = _furthestPosition;
+                    _isPlaying = true;
+                  });
+                  await _audioPlayer.play();
+                },
+                child: IconButton(
+                  onPressed: () async {
+                    if (_isPlaying) {
+                      await _audioPlayer.pause();
                       setState(() {
-                        _currentPosition = Duration.zero;
+                        _isPlaying = false;
+                      });
+                    } else {
+                      if (_currentPosition >= _totalDuration) {
+                        await _audioPlayer.seek(Duration.zero);
+                        setState(() {
+                          _currentPosition = Duration.zero;
+                        });
+                      }
+                      await _audioPlayer.play();
+                      setState(() {
+                        _isPlaying = true;
                       });
                     }
-                    await _audioPlayer.play();
-                    setState(() {
-                      _isPlaying = true;
-                    });
-                  }
-                  print(
-                      "play press: playing: $_isPlaying, audioloaded: $_isAudioLoaded ");
-                },
-                icon: Icon(
-                  _isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: Color(0xFFFFEFC3),
+                    print(
+                        "play press: playing: $_isPlaying, audioloaded: $_isAudioLoaded");
+                  },
+                  icon: Icon(
+                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Color(0xFFFFEFC3),
+                  ),
                 ),
               ),
               SizedBox(width: 10),
