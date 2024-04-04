@@ -6,14 +6,12 @@ class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
   final String audioTitle;
   final String fileId;
-  final Function(int) onProgressChanged;
 
   AudioPlayerWidget({
     Key? key,
     required this.audioUrl,
     required this.audioTitle,
     required this.fileId,
-    required this.onProgressChanged,
   }) : super(key: key);
 
   @override
@@ -28,7 +26,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   bool _isBuffering = false;
   bool _isAudioLoaded = false;
   String _errorMessage = '';
-  Duration _furthestPosition = Duration.zero;
 
   @override
   void initState() {
@@ -40,12 +37,11 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   @override
   void didUpdateWidget(AudioPlayerWidget oldWidget) {
     if (oldWidget.audioUrl != widget.audioUrl) {
-      _saveProgress();
+      _audioPlayer.dispose();
+      _audioPlayer = AudioPlayer();
       _initAudio(); // Re-initialize audio if the URL changes
-      print("init audio triggered");
     }
     super.didUpdateWidget(oldWidget);
-    print("did update, playing: $_isPlaying");
   }
 
   Future<void> _initAudio() async {
@@ -65,67 +61,25 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       _audioPlayer.positionStream.listen((position) {
         setState(() {
           _currentPosition = position;
-          if (position > _furthestPosition) {
-            _furthestPosition = position;
-            if (_totalDuration.inMilliseconds > 0) {
-              double progress = (_furthestPosition.inMilliseconds /
-                      _totalDuration.inMilliseconds) *
-                  100;
-              widget.onProgressChanged(progress.toInt());
-            }
-          }
         });
       });
 
       setState(() {
         _isAudioLoaded = true;
         _errorMessage = '';
-        _isPlaying = true;
       });
-
-      print(
-          "inside init audio: audio loaded $_isAudioLoaded, playing: $_isPlaying");
-
-      // Retrieve the stored progress from shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      final storedProgress = prefs.getInt('${widget.fileId}_progress') ?? 0;
-      _furthestPosition = Duration(milliseconds: storedProgress);
-
-      // Jump to the furthest position
-      await _audioPlayer.seek(_furthestPosition);
-      setState(() {
-        _currentPosition = _furthestPosition;
-      });
-      if (_isPlaying) {
-        await _audioPlayer.play();
-        print(
-            "init audio starting audioplayer, is playing (should be true): $_isPlaying");
-      }
-
-      // Autoplay the audio if it's not already playing
-      if (!_isPlaying) {
-        await _audioPlayer.play();
-      }
 
       _audioPlayer.playerStateStream.listen((state) {
         setState(() {
           _isPlaying = state.playing;
           _isBuffering = state.processingState == ProcessingState.buffering;
-          print(
-              "getting playerstate stream, isplaying: $_isPlaying, is buffering: $_isBuffering ");
         });
-
-        if (!state.playing) {
-          _saveProgress(); // Save progress when the audio is paused or finished
-          widget.onProgressChanged((_currentPosition.inMilliseconds /
-                  _totalDuration.inMilliseconds *
-                  100)
-              .toInt());
-        }
+        print("state: ${state.playing}");
       });
 
+      await _audioPlayer.play();
+
       _audioPlayer.processingStateStream.listen((state) {
-        print("Debug: Processing state changed to $state");
         setState(() {
           _isBuffering = state == ProcessingState.buffering;
         });
@@ -140,21 +94,8 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     }
   }
 
-  Future<void> _saveProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final currentProgress = _currentPosition.inMilliseconds;
-
-    if (currentProgress > _furthestPosition.inMilliseconds) {
-      _furthestPosition = Duration(milliseconds: currentProgress);
-      await prefs.setInt('${widget.fileId}_progress', currentProgress);
-    } else if (_furthestPosition == Duration.zero) {
-      await prefs.remove('${widget.fileId}_progress');
-    }
-  }
-
   @override
   void dispose() {
-    _saveProgress();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -169,17 +110,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void _seekAudio(double value) {
     final seekPosition = Duration(milliseconds: value.toInt());
     _audioPlayer.seek(seekPosition);
-
-    setState(() {
-      _currentPosition = seekPosition;
-    });
-
-    if (seekPosition > _furthestPosition) {
-      setState(() {
-        _furthestPosition = seekPosition;
-      });
-      _saveProgress();
-    }
   }
 
   void _jumpBackward() {
@@ -204,15 +134,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     double currentPositionValue = _currentPosition.inMilliseconds.toDouble();
     double totalDurationValue = _totalDuration.inMilliseconds.toDouble();
     currentPositionValue = currentPositionValue.clamp(0.0, totalDurationValue);
-
-    double furthestPositionValue = _furthestPosition.inMilliseconds.toDouble();
-    furthestPositionValue =
-        furthestPositionValue.clamp(0.0, totalDurationValue);
-
-    double progress = _totalDuration.inMilliseconds > 0
-        ? (_furthestPosition.inMilliseconds / _totalDuration.inMilliseconds) *
-            100
-        : 0;
 
     return Container(
       color: Color(0xFF4B473D),
@@ -258,11 +179,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             ],
           ),
           SizedBox(height: 10),
-          Text(
-            'Progress: ${progress.toStringAsFixed(1)}%',
-            style: TextStyle(color: Color(0xFFFFEFC3)),
-          ),
-          SizedBox(height: 10),
           _isAudioLoaded
               ? Row(
                   children: [
@@ -274,40 +190,19 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                       ),
                     ),
                     Expanded(
-                      child: Stack(
-                        children: [
-                          //Furthest position
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 4,
-                              thumbShape: RoundSliderThumbShape(
-                                enabledThumbRadius: 3,
-                              ),
-                              activeTrackColor: Color(0xFFFFEFC3),
-                              inactiveTrackColor: Color(0xFFFFEFC3),
-                            ),
-                            child: Slider(
-                              value: furthestPositionValue,
-                              min: 0.0,
-                              max: totalDurationValue,
-                              onChanged: null,
-                            ),
-                          ),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 4,
-                              thumbColor: Color(0xFFFFEFC3),
-                              activeTrackColor: Color(0xFFFFEFC3),
-                              inactiveTrackColor: Colors.transparent,
-                            ),
-                            child: Slider(
-                              value: currentPositionValue,
-                              min: 0.0,
-                              max: totalDurationValue,
-                              onChanged: _seekAudio,
-                            ),
-                          ),
-                        ],
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 4,
+                          thumbColor: Color(0xFFFFEFC3),
+                          activeTrackColor: Color(0xFFFFEFC3),
+                          inactiveTrackColor: Colors.transparent,
+                        ),
+                        child: Slider(
+                          value: currentPositionValue,
+                          min: 0.0,
+                          max: totalDurationValue,
+                          onChanged: _seekAudio,
+                        ),
                       ),
                     ),
                     Text(
@@ -326,18 +221,14 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   await _audioPlayer.stop();
                   await _audioPlayer.seek(Duration.zero);
                   setState(() {
-                    _isPlaying = false;
                     _currentPosition = Duration.zero;
-                    _furthestPosition = Duration.zero;
                   });
-                  await _saveProgress();
                 },
                 child: IconButton(
                   onPressed: () async {
                     await _audioPlayer.stop();
                     await _audioPlayer.seek(Duration.zero);
                     setState(() {
-                      _isPlaying = false;
                       _currentPosition = Duration.zero;
                     });
                   },
@@ -352,9 +243,8 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               SizedBox(width: 10),
               GestureDetector(
                 onLongPress: () async {
-                  await _audioPlayer.seek(_furthestPosition);
+                  await _audioPlayer.seek(_currentPosition);
                   setState(() {
-                    _currentPosition = _furthestPosition;
                     _isPlaying = true;
                   });
                   await _audioPlayer.play();
@@ -363,9 +253,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   onPressed: () async {
                     if (_isPlaying) {
                       await _audioPlayer.pause();
-                      setState(() {
-                        _isPlaying = false;
-                      });
                     } else {
                       if (_currentPosition >= _totalDuration) {
                         await _audioPlayer.seek(Duration.zero);
@@ -374,12 +261,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                         });
                       }
                       await _audioPlayer.play();
-                      setState(() {
-                        _isPlaying = true;
-                      });
                     }
-                    print(
-                        "play press: playing: $_isPlaying, audioloaded: $_isAudioLoaded");
                   },
                   icon: Icon(
                     _isPlaying ? Icons.pause : Icons.play_arrow,

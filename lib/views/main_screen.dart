@@ -91,17 +91,6 @@ class MainScreenState extends State<MainScreen> {
     });
   }
 
-  Future<void> _syncProgressWithFirestore(String fileId, int progress) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('audioFiles')
-          .doc(fileId)
-          .update({'progress': progress});
-    } catch (e) {
-      print('Error syncing progress with Firestore: ${e.toString()}');
-    }
-  }
-
   @override
   void dispose() {
     _scrollController.dispose();
@@ -306,8 +295,6 @@ class MainScreenState extends State<MainScreen> {
             audioUrl: selectedAudioUrl,
             audioTitle: selectedAudioTitle,
             fileId: selectedFileId,
-            onProgressChanged: (progress) =>
-                _syncProgressWithFirestore(selectedFileId, progress),
           ),
         ],
       ),
