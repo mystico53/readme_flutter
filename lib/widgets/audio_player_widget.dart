@@ -218,10 +218,9 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       color: Color(0xFF4B473D),
       padding: EdgeInsets.all(16.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_isBuffering)
-            LinearProgressIndicator()
-          else if (!_isAudioLoaded)
+          if (!_isAudioLoaded)
             Text(
               _errorMessage,
               style: TextStyle(color: Color(0xFFFFEFC3)),
@@ -229,13 +228,34 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           else
             SizedBox.shrink(),
           SizedBox(height: 10),
-          Text(
-            widget.audioTitle,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Color(0xFFFFEFC3),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_isBuffering && _isAudioLoaded)
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFFFFEFC3)),
+                  ),
+                )
+              else
+                SizedBox(width: 16),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  widget.audioTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFFFFEFC3),
+                  ),
+                  softWrap: true,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 10),
           Text(

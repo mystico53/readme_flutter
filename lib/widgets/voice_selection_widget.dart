@@ -13,14 +13,14 @@ class VoiceSelectionWidget extends StatefulWidget {
 class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
   List<VoiceModel> voices = [
     VoiceModel(
-        name: "🇺🇸 Craig",
-        languageCode: "en-US",
-        voiceName: "en-US-Neural2-J",
-        speakingRate: 0.85),
-    VoiceModel(
-        name: "🇺🇸 Gordon (News)",
+        name: "🇺🇸 Craig (News)",
         languageCode: "en-US",
         voiceName: "en-US-News-N",
+        speakingRate: 0.85),
+    VoiceModel(
+        name: "🇺🇸 Gordon",
+        languageCode: "en-US",
+        voiceName: "en-US-Neural2-J",
         speakingRate: 0.9),
     VoiceModel(
         name: "🇺🇸 Malcolm (Poly)",
@@ -71,7 +71,8 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
   void initState() {
     super.initState();
     // Initialize selectedVoice with Craig's VoiceModel
-    selectedVoice = voices.firstWhere((voice) => voice.name == "🇺🇸 Craig",
+    selectedVoice = voices.firstWhere(
+        (voice) => voice.name == "🇺🇸 Craig (News)",
         orElse: () => voices.first);
   }
 

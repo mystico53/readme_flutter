@@ -166,115 +166,128 @@ class MainScreenState extends State<MainScreen> {
                           );
                         }
 
-                        return ListView.separated(
-                          controller: _scrollController,
-                          itemCount: documents.length,
-                          separatorBuilder: (context, index) => Divider(),
-                          itemBuilder: (context, index) {
-                            final document = documents[index];
-                            final fileId = document.id;
-                            final data =
-                                document.data() as Map<String, dynamic>?;
-                            final status = data?['status'] as String?;
-                            final createdAt = data?['created_at'] as Timestamp?;
-                            final formattedCreatedAt = createdAt != null
-                                ? DateFormat('MMMM d, yyyy, h:mm a')
-                                    .format(createdAt.toDate())
-                                : 'endingP';
-                            final title = data?['title'] as String?;
-                            final progress = data?['progress'] ?? 0;
-                            final progressPercentage = progress / 1000;
+                        return Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: ListView.separated(
+                            controller: _scrollController,
+                            itemCount: documents.length,
+                            separatorBuilder: (context, index) =>
+                                SizedBox(height: 5),
+                            itemBuilder: (context, index) {
+                              final document = documents[index];
+                              final fileId = document.id;
+                              final data =
+                                  document.data() as Map<String, dynamic>?;
+                              final status = data?['status'] as String?;
+                              final createdAt =
+                                  data?['created_at'] as Timestamp?;
+                              final formattedCreatedAt = createdAt != null
+                                  ? DateFormat('MMMM d, yyyy, h:mm a')
+                                      .format(createdAt.toDate())
+                                  : 'endingP';
+                              final title = data?['title'] as String?;
+                              final progress = data?['progress'] ?? 0;
+                              final progressPercentage = progress / 1000;
 
-                            return ListTile(
-                              title: Text(title ?? 'New Lisme is created'),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                              return Container(
+                                margin: EdgeInsets.symmetric(horizontal: 5),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Color(0xFF4B473D),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: ListTile(
+                                  title: Text(title ?? 'New Lisme is created'),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      if (status != 'ready')
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 8.0),
-                                          child: SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                                      Row(
+                                        children: [
+                                          if (status != 'ready')
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  right: 8.0),
+                                              child: SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                ),
+                                              ),
+                                            ),
+                                          Text(
+                                            'Status: ${status ?? 'Preparing'}',
+                                            style: TextStyle(
+                                              color: status == 'error'
+                                                  ? Colors.red
+                                                  : null,
                                             ),
                                           ),
-                                        ),
-                                      Text(
-                                        'Status: ${status ?? 'Preparing'}',
-                                        style: TextStyle(
-                                          color: status == 'error'
-                                              ? Colors.red
-                                              : null,
-                                        ),
+                                        ],
                                       ),
-                                      /*
+                                      Row(
+                                        children: [
+                                          Text('$formattedCreatedAt'),
+                                          SizedBox(width: 8),
+                                          IconButton(
+                                            icon: Icon(Icons.delete, size: 16),
+                                            onPressed: () async {
+                                              print(
+                                                  "Deleting document with ID: $fileId");
+                                              await FirebaseFirestore.instance
+                                                  .collection('audioFiles')
+                                                  .doc(fileId)
+                                                  .delete();
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                       SizedBox(height: 4),
-                                      Text(
-                                          'Progress: ${progressPercentage.toStringAsFixed(2)}%'),*/
+                                      if (status != 'ready')
+                                        LinearProgressIndicator(
+                                          value: calculateProgress(status),
+                                          backgroundColor: Colors.grey[300],
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF4B473D)),
+                                        ),
+                                      SizedBox(height: 4),
                                     ],
                                   ),
-                                  Row(
-                                    children: [
-                                      Text('$formattedCreatedAt'),
-                                      SizedBox(width: 8),
-                                      IconButton(
-                                        icon: Icon(Icons.delete, size: 16),
-                                        onPressed: () async {
-                                          print(
-                                              "Deleting document with ID: $fileId");
-                                          await FirebaseFirestore.instance
-                                              .collection('audioFiles')
-                                              .doc(fileId)
-                                              .delete();
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4),
-                                  if (status != 'ready')
-                                    LinearProgressIndicator(
-                                      value: calculateProgress(status),
-                                      backgroundColor: Colors.grey[300],
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.blue),
-                                    ),
-                                  SizedBox(height: 4),
-                                ],
-                              ),
-                              trailing: status == 'ready'
-                                  ? CircleAvatar(
-                                      backgroundColor: Colors.blue,
-                                      child: IconButton(
-                                        icon: Icon(Icons.play_arrow,
-                                            color: Colors.white),
-                                        onPressed: () {
-                                          final httpsUrl =
-                                              data?['httpsUrl'] as String?;
-                                          final title =
-                                              data?['title'] as String?;
-                                          if (httpsUrl != null &&
-                                              httpsUrl.isNotEmpty &&
-                                              title != null) {
-                                            setState(() {
-                                              selectedAudioUrl = httpsUrl;
-                                              selectedAudioTitle = title;
-                                              selectedFileId = fileId;
-                                            });
-                                          } else {
-                                            print(
-                                                'Audio URL or title is missing or invalid for document: $fileId');
-                                          }
-                                        },
-                                      ),
-                                    )
-                                  : Icon(Icons.hourglass_empty),
-                            );
-                          },
+                                  trailing: status == 'ready'
+                                      ? CircleAvatar(
+                                          backgroundColor: Color(0xFF4B473D),
+                                          child: IconButton(
+                                            icon: Icon(Icons.play_arrow,
+                                                color: Color(0xFFFFEFC3)),
+                                            onPressed: () {
+                                              final httpsUrl =
+                                                  data?['httpsUrl'] as String?;
+                                              final title =
+                                                  data?['title'] as String?;
+                                              if (httpsUrl != null &&
+                                                  httpsUrl.isNotEmpty &&
+                                                  title != null) {
+                                                setState(() {
+                                                  selectedAudioUrl = httpsUrl;
+                                                  selectedAudioTitle = title;
+                                                  selectedFileId = fileId;
+                                                });
+                                              } else {
+                                                print(
+                                                    'Audio URL or title is missing or invalid for document: $fileId');
+                                              }
+                                            },
+                                          ),
+                                        )
+                                      : Icon(Icons.hourglass_empty),
+                                ),
+                              );
+                            },
+                          ),
                         );
                       } else if (snapshot.hasError) {
                         // Log the error
