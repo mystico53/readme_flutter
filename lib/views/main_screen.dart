@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:feedback/feedback.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import '../services/feedback_service.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
@@ -26,6 +27,7 @@ class MainScreenState extends State<MainScreen> {
   String sharedContent = "";
   bool isDialogOpen = false;
   String selectedFileId = '';
+  final audioPlayerViewModel = AudioPlayerViewModel();
 
   @override
   void initState() {
@@ -295,6 +297,7 @@ class MainScreenState extends State<MainScreen> {
             audioUrl: selectedAudioUrl,
             audioTitle: selectedAudioTitle,
             fileId: selectedFileId,
+            viewModel: audioPlayerViewModel,
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
@@ -7,11 +8,14 @@ class AudioPlayerWidget extends StatefulWidget {
   final String audioTitle;
   final String fileId;
 
+  final AudioPlayerViewModel viewModel;
+
   AudioPlayerWidget({
     Key? key,
     required this.audioUrl,
     required this.audioTitle,
     required this.fileId,
+    required this.viewModel,
   }) : super(key: key);
 
   @override
@@ -58,10 +62,14 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       await _audioPlayer.setUrl(widget.audioUrl);
       _totalDuration = _audioPlayer.duration ?? Duration.zero;
 
+      //send viewmodel fileid and duration
+      widget.viewModel.startPeriodicUpdate(_totalDuration, widget.fileId);
+
       _audioPlayer.positionStream.listen((position) {
         setState(() {
           _currentPosition = position;
         });
+        widget.viewModel.updatePosition(position);
       });
 
       setState(() {
