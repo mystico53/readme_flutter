@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:readme_app/intropages/intropage_main.dart';
+import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import 'services/intent_service.dart';
 import 'view_models/generate_dialog_viewmodel.dart';
 import 'view_models/intent_viewmodel.dart';
@@ -27,6 +28,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),
+        ChangeNotifierProvider(create: (context) => AudioPlayerViewModel()),
         // Retrieve the userId from UserIdViewModel
         ChangeNotifierProvider(
           create: (context) {
