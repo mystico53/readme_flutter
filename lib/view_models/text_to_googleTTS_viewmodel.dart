@@ -1,4 +1,4 @@
-/* TO DO delete?
+// TO DO delete?
 import 'package:flutter/material.dart';
 import 'package:readme_app/models/voice_model.dart';
 import 'package:readme_app/services/text_to_googleTTS.dart';
@@ -25,7 +25,6 @@ class TextToGoogleTTSViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-
   Future<void> generateAndCheckAudio(
       String text, String userId, VoiceModel? selectedVoice) async {
     print("calling generate and check in google tts");
@@ -51,6 +50,5 @@ class TextToGoogleTTSViewModel with ChangeNotifier {
       enableGenerateButton(); // Re-enable the button after the process completes or fails
       notifyListeners(); // Notify listeners to update the UI based on the new state
     }
-  } 
+  }
 }
-*/

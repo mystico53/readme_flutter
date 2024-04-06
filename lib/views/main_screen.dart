@@ -207,103 +207,113 @@ class MainScreenState extends State<MainScreen> {
                                     width: 1.5,
                                   ),
                                 ),
-                                child: ListTile(
-                                  title: Text(title ?? 'New Lisme is created'),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                                child: Stack(
+                                  children: [
+                                    ListTile(
+                                      title:
+                                          Text(title ?? 'New Lisme is created'),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          if (status != 'ready')
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  right: 8.0),
-                                              child: SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
+                                          Row(
+                                            children: [
+                                              if (status != 'ready')
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 8.0),
+                                                  child: SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  ),
+                                                ),
+                                              Text(
+                                                'Status: ${status ?? 'Preparing'}',
+                                                style: TextStyle(
+                                                  color: status == 'error'
+                                                      ? Colors.red
+                                                      : null,
                                                 ),
                                               ),
-                                            ),
-                                          Text(
-                                            'Status: ${status ?? 'Preparing'}',
-                                            style: TextStyle(
-                                              color: status == 'error'
-                                                  ? Colors.red
-                                                  : null,
-                                            ),
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text('$formattedCreatedAt'),
+                                              SizedBox(width: 8),
+                                              IconButton(
+                                                icon: Icon(Icons.delete,
+                                                    size: 16),
+                                                onPressed: () async {
+                                                  print(
+                                                      "Deleting document with ID: $fileId");
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('audioFiles')
+                                                      .doc(fileId)
+                                                      .delete();
+                                                },
+                                              ),
+                                              SizedBox(width: 8),
+                                              if (formattedDuration.isNotEmpty)
+                                                Text('$formattedDuration'),
+                                              SizedBox(width: 8),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                      Row(
-                                        children: [
-                                          Text('$formattedCreatedAt'),
-                                          SizedBox(width: 8),
-                                          IconButton(
-                                            icon: Icon(Icons.delete, size: 16),
-                                            onPressed: () async {
-                                              print(
-                                                  "Deleting document with ID: $fileId");
-                                              await FirebaseFirestore.instance
-                                                  .collection('audioFiles')
-                                                  .doc(fileId)
-                                                  .delete();
-                                            },
-                                          ),
-                                          SizedBox(width: 8),
-                                          if (formattedDuration.isNotEmpty)
-                                            Text('$formattedDuration'),
-                                          SizedBox(width: 8),
-                                        ],
-                                      ),
-                                      SizedBox(height: 4),
-                                      Container(
-                                        margin: EdgeInsets.only(
-                                            left: -16.0,
-                                            right: -16.0,
-                                            bottom: -16.0),
-                                        padding: EdgeInsets.zero,
+                                      trailing: status == 'ready'
+                                          ? CircleAvatar(
+                                              backgroundColor:
+                                                  Color(0xFF4B473D),
+                                              child: IconButton(
+                                                icon: Icon(Icons.play_arrow,
+                                                    color: Color(0xFFFFEFC3)),
+                                                onPressed: () async {
+                                                  final httpsUrl =
+                                                      data?['httpsUrl']
+                                                          as String?;
+                                                  final title =
+                                                      data?['title'] as String?;
+                                                  if (httpsUrl != null &&
+                                                      httpsUrl.isNotEmpty &&
+                                                      title != null) {
+                                                    setState(() {
+                                                      selectedAudioUrl =
+                                                          httpsUrl;
+                                                      selectedAudioTitle =
+                                                          title;
+                                                      selectedFileId = fileId;
+                                                    });
+                                                  } else {
+                                                    print(
+                                                        'Audio URL or title is missing or invalid for document: $fileId');
+                                                  }
+                                                },
+                                              ),
+                                            )
+                                          : Icon(Icons.hourglass_empty),
+                                    ),
+                                    if (status != 'ready')
+                                      Positioned(
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
                                         child: LinearProgressIndicator(
                                           value: calculateProgress(status),
                                           backgroundColor: Color(0xFFFFEFC3),
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
                                                   Color(0xFF4B473D)),
-                                          minHeight: 4.0,
+                                          minHeight: 8.0,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  trailing: status == 'ready'
-                                      ? CircleAvatar(
-                                          backgroundColor: Color(0xFF4B473D),
-                                          child: IconButton(
-                                            icon: Icon(Icons.play_arrow,
-                                                color: Color(0xFFFFEFC3)),
-                                            onPressed: () async {
-                                              final httpsUrl =
-                                                  data?['httpsUrl'] as String?;
-                                              final title =
-                                                  data?['title'] as String?;
-                                              if (httpsUrl != null &&
-                                                  httpsUrl.isNotEmpty &&
-                                                  title != null) {
-                                                setState(() {
-                                                  selectedAudioUrl = httpsUrl;
-                                                  selectedAudioTitle = title;
-                                                  selectedFileId = fileId;
-                                                });
-                                              } else {
-                                                print(
-                                                    'Audio URL or title is missing or invalid for document: $fileId');
-                                              }
-                                            },
-                                          ),
-                                        )
-                                      : Icon(Icons.hourglass_empty),
+                                  ],
                                 ),
                               );
                             },
