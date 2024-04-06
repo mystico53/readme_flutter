@@ -40,7 +40,7 @@ class AudioPlayerViewModel extends ChangeNotifier {
               'Progress percentage: $formattedPercentage% for file ID: $_currentFileId');
 
           // Save to SharedPreferences
-          await _saveProgress(_currentFileId!, _maxReportedPosition);
+          await saveProgress(_currentFileId!, _maxReportedPosition);
 
           notifyListeners();
         }
@@ -54,11 +54,12 @@ class AudioPlayerViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveProgress(String fileId, Duration position) async {
+  Future<void> saveProgress(String fileId, Duration position) async {
     if (_prefs == null) {
       print("SharedPreferences not initialized, cannot save progress.");
       return;
     }
+
     await _prefs!.setString('$fileId', position.inMilliseconds.toString());
     print("Saved progress: $position ms for file ID: $fileId.");
   }

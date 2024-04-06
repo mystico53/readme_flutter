@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import '../models/voice_model.dart';
 import '../services/clean_text.dart';
 import '../services/create_firestore_document_service.dart';
@@ -7,13 +8,16 @@ import '../services/generate_title_service.dart';
 import '../services/process_text_service.dart';
 import '../services/text_to_googleTTS.dart';
 import '../utils/id_manager.dart';
+import 'package:just_audio/just_audio.dart';
 
 class GenerateDialogViewModel with ChangeNotifier {
   GenerateDialogViewModel(this.userId) {
     listenToFirestoreChanges();
+    _audioPlayerViewModel = AudioPlayerViewModel();
   }
 
   final String userId;
+  late final AudioPlayerViewModel _audioPlayerViewModel;
   String _response = '';
   int characterCount = 0;
 
@@ -93,6 +97,58 @@ class GenerateDialogViewModel with ChangeNotifier {
           await FirestoreService()
               .updateFirestoreDocumentStatus(fileId, 'ready', userId);
           _response = checkResult['response'];
+
+          // Indicate the start of the process
+          print('Starting to retrieve audio URL for fileId: $fileId');
+
+          // Retrieve the audio URL from Firestore
+          final audioUrl = await FirestoreService().getAudioUrl(fileId);
+
+          if (audioUrl != null) {
+            // Confirm that the audio URL was successfully retrieved
+            print(
+                'Audio URL retrieved successfully for fileId: $fileId, URL: $audioUrl');
+
+            // Create an instance of AudioPlayer
+            final player = AudioPlayer();
+            print('AudioPlayer instance created.');
+
+            try {
+              // Attempt to load the audio URL
+              print('Attempting to load audio from URL: $audioUrl');
+              await player.setUrl(audioUrl);
+              print('Audio loaded successfully.');
+
+              // Retrieve the duration and print it
+              final duration = await player.durationFuture;
+              print('Audio duration: $duration');
+
+              // When done, dispose of the player
+              await player.dispose();
+              print('AudioPlayer disposed.');
+
+              // Update the Firestore document with the audio duration if it's not null
+              if (duration != null) {
+                await FirestoreService().updateFirestoreDocumentDuration(
+                  fileId,
+                  duration.inSeconds,
+                  userId,
+                );
+                print('Succes: Audio duration written to firestore');
+
+                // Call the _saveProgress function from AudioPlayerViewModel
+                await _audioPlayerViewModel.saveProgress(fileId, Duration.zero);
+              } else {
+                print('Audio duration is null for fileId: $fileId');
+              }
+            } catch (e) {
+              // If an error occurs, print it
+              print('Error loading audio from URL: $audioUrl, Error: $e');
+            }
+          } else {
+            // If the audio URL was not found, print an error message
+            print('Audio URL not found for fileId: $fileId');
+          }
         } else {
           _response = checkResult['error'];
           await FirestoreService().updateFirestoreDocumentStatus(

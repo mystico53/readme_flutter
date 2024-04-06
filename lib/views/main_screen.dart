@@ -93,6 +93,20 @@ class MainScreenState extends State<MainScreen> {
     });
   }
 
+  String formatDuration(int? durationInSeconds) {
+    if (durationInSeconds == null) {
+      return '';
+    }
+
+    if (durationInSeconds < 60) {
+      return '$durationInSeconds sec';
+    } else {
+      final minutes = durationInSeconds ~/ 60;
+      final seconds = durationInSeconds % 60;
+      return '$minutes min ${seconds > 0 ? '$seconds sec' : ''}';
+    }
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -180,6 +194,11 @@ class MainScreenState extends State<MainScreen> {
                               final progress = data?['progress'] ?? 0;
                               final progressPercentage = progress / 1000;
 
+                              final durationInSeconds =
+                                  data?['duration'] as int?;
+                              final formattedDuration =
+                                  formatDuration(durationInSeconds);
+
                               return Container(
                                 margin: EdgeInsets.symmetric(horizontal: 5),
                                 decoration: BoxDecoration(
@@ -234,18 +253,28 @@ class MainScreenState extends State<MainScreen> {
                                                   .delete();
                                             },
                                           ),
+                                          SizedBox(width: 8),
+                                          if (formattedDuration.isNotEmpty)
+                                            Text('$formattedDuration'),
+                                          SizedBox(width: 8),
                                         ],
                                       ),
                                       SizedBox(height: 4),
-                                      if (status != 'ready')
-                                        LinearProgressIndicator(
+                                      Container(
+                                        margin: EdgeInsets.only(
+                                            left: -16.0,
+                                            right: -16.0,
+                                            bottom: -16.0),
+                                        padding: EdgeInsets.zero,
+                                        child: LinearProgressIndicator(
                                           value: calculateProgress(status),
-                                          backgroundColor: Colors.grey[300],
+                                          backgroundColor: Color(0xFFFFEFC3),
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
                                                   Color(0xFF4B473D)),
+                                          minHeight: 4.0,
                                         ),
-                                      SizedBox(height: 4),
+                                      ),
                                     ],
                                   ),
                                   trailing: status == 'ready'
@@ -254,7 +283,7 @@ class MainScreenState extends State<MainScreen> {
                                           child: IconButton(
                                             icon: Icon(Icons.play_arrow,
                                                 color: Color(0xFFFFEFC3)),
-                                            onPressed: () {
+                                            onPressed: () async {
                                               final httpsUrl =
                                                   data?['httpsUrl'] as String?;
                                               final title =

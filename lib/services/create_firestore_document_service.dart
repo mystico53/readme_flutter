@@ -76,4 +76,41 @@ class FirestoreService {
       print('Error updating Firestore document status: $e');
     }
   }
+
+  Future<String?> getAudioUrl(String fileId) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('audioFiles')
+          .doc(fileId)
+          .get();
+
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>?;
+        return data?['httpsUrl'] as String?;
+      }
+    } catch (e) {
+      print('Error retrieving audio URL: $e');
+    }
+
+    return null;
+  }
+
+  Future<void> updateFirestoreDocumentDuration(
+    String fileId,
+    int durationInSeconds,
+    String userId,
+  ) async {
+    try {
+      final documentReference =
+          FirebaseFirestore.instance.collection('audioFiles').doc(fileId);
+
+      await documentReference.update({
+        'duration': durationInSeconds,
+      });
+
+      print('Duration added to Firestore document for fileId: $fileId');
+    } catch (e) {
+      print('Error adding duration to Firestore document: $e');
+    }
+  }
 }
