@@ -11,6 +11,7 @@ import '../view_models/intent_viewmodel.dart';
 import '../view_models/user_id_viewmodel.dart';
 import '../views/generate_dialog.dart';
 import '../widgets/audio_player_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -28,6 +29,7 @@ class MainScreenState extends State<MainScreen> {
   bool isDialogOpen = false;
   String selectedFileId = '';
   final audioPlayerViewModel = AudioPlayerViewModel();
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
@@ -35,6 +37,11 @@ class MainScreenState extends State<MainScreen> {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.addListener(_handleIntentViewModelChange);
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        _prefs = prefs;
+      });
+    });
   }
 
   void checkForSharedFiles() {
@@ -263,7 +270,13 @@ class MainScreenState extends State<MainScreen> {
                                               if (formattedDuration.isNotEmpty)
                                                 Text('$formattedDuration'),
                                               SizedBox(width: 8),
+                                              // Fetch and display saved progress
                                             ],
+                                          ),
+                                          Text(
+                                            _prefs?.getString('$fileId') != null
+                                                ? 'Progress: ${_prefs!.getString('$fileId')} ms'
+                                                : 'Not started yet',
                                           ),
                                         ],
                                       ),
