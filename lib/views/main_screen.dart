@@ -297,11 +297,11 @@ class MainScreenState extends State<MainScreen> {
                                           ),
                                           Text(
                                             _prefs?.getString('$fileId') != null
-                                                ? 'Progress: ${_prefs!.getString('$fileId')} ms'
+                                                ? 'Progress time: ${_prefs!.getString('$fileId')} ms'
                                                 : 'Not started yet',
                                           ),
                                           Text(
-                                            'Progress: ${progress.toStringAsFixed(1)}%',
+                                            'Progress listen: ${progress.toStringAsFixed(1)}%',
                                           ),
                                         ],
                                       ),

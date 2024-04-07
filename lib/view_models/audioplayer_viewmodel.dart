@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AudioPlayerViewModel extends ChangeNotifier {
-  Duration _maxReportedPosition = Duration.zero; // Track the maximum position
+  late Duration _maxReportedPosition;
   double _lastProgressPercentage = 0.0;
   Timer? _periodicTimer;
   String? _currentFileId;
@@ -26,28 +26,45 @@ class AudioPlayerViewModel extends ChangeNotifier {
 
   void startPeriodicUpdate(Duration totalDuration, String fileId) {
     _currentFileId = fileId;
-    _maxReportedPosition = Duration.zero;
     _periodicTimer?.cancel();
-
     print("Starting periodic update for file ID: $fileId");
-    _periodicTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      if (totalDuration.inSeconds > 0 && _maxReportedPosition.inSeconds > 0) {
-        final double progressPercentage =
-            (_maxReportedPosition.inSeconds / totalDuration.inSeconds) * 100;
-        String formattedPercentage = progressPercentage.toStringAsFixed(1);
 
-        if (progressPercentage != _lastProgressPercentage) {
-          _lastProgressPercentage = progressPercentage;
-          print(
-              'Progress percentage: $formattedPercentage% for file ID: $_currentFileId');
+    // Load the saved progress from SharedPreferences
+    _loadSavedProgress(fileId).then((savedPosition) {
+      _maxReportedPosition = savedPosition ?? Duration.zero;
+      print(
+          "Loaded saved progress: $_maxReportedPosition ms for file ID: $fileId");
 
-          // Save to SharedPreferences
-          await saveProgress(_currentFileId!, _maxReportedPosition);
-
-          notifyListeners();
+      _periodicTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+        if (totalDuration.inSeconds > 0 && _maxReportedPosition.inSeconds > 0) {
+          final double progressPercentage =
+              (_maxReportedPosition.inSeconds / totalDuration.inSeconds) * 100;
+          String formattedPercentage = progressPercentage.toStringAsFixed(1);
+          if (progressPercentage != _lastProgressPercentage) {
+            _lastProgressPercentage = progressPercentage;
+            print(
+                'Progress percentage: $formattedPercentage% for file ID: $_currentFileId');
+            // Save to SharedPreferences
+            await saveProgress(_currentFileId!, _maxReportedPosition);
+            notifyListeners();
+          }
         }
-      }
+      });
     });
+  }
+
+  Future<Duration?> _loadSavedProgress(String fileId) async {
+    if (_prefs == null) {
+      print("SharedPreferences not initialized, cannot load saved progress.");
+      return null;
+    }
+
+    String? savedProgressString = _prefs!.getString('$fileId');
+    if (savedProgressString != null) {
+      int savedMilliseconds = int.parse(savedProgressString);
+      return Duration(milliseconds: savedMilliseconds);
+    }
+    return null;
   }
 
   void updatePosition(Duration currentPosition) {
