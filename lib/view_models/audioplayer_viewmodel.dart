@@ -7,6 +7,8 @@ class AudioPlayerViewModel extends ChangeNotifier {
   double _lastProgressPercentage = 0.0;
   Timer? _periodicTimer;
   String? _currentFileId;
+  String? get currentFileId => _currentFileId;
+  double get lastProgressPercentage => _lastProgressPercentage;
 
   // Added SharedPreferences instance
   SharedPreferences? _prefs;

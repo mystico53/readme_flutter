@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +32,8 @@ class MainScreenState extends State<MainScreen> {
   String selectedFileId = '';
   final audioPlayerViewModel = AudioPlayerViewModel();
   SharedPreferences? _prefs;
+  late VoidCallback _progressListener;
+  Map<String, double> _fileProgress = {};
 
   @override
   void initState() {
@@ -42,6 +46,16 @@ class MainScreenState extends State<MainScreen> {
         _prefs = prefs;
       });
     });
+    _progressListener = () {
+      final fileId = audioPlayerViewModel.currentFileId;
+      final progress = audioPlayerViewModel.lastProgressPercentage;
+      if (fileId != null) {
+        setState(() {
+          _fileProgress[fileId] = progress;
+        });
+      }
+    };
+    audioPlayerViewModel.addListener(_progressListener);
   }
 
   void checkForSharedFiles() {
@@ -114,12 +128,20 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
+  void _updateProgress() {
+    setState(() {
+      // Update the progress in the UI
+      // You can access the progress using audioPlayerViewModel.lastProgressPercentage
+    });
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.removeListener(_handleIntentViewModelChange);
+    audioPlayerViewModel.removeListener(_progressListener);
     super.dispose();
   }
 
@@ -198,8 +220,8 @@ class MainScreenState extends State<MainScreen> {
                                       .format(createdAt.toDate())
                                   : 'endingP';
                               final title = data?['title'] as String?;
-                              final progress = data?['progress'] ?? 0;
-                              final progressPercentage = progress / 1000;
+                              //final progress = data?['progress'] ?? 0;
+                              final progress = _fileProgress[fileId] ?? 0.0;
 
                               final durationInSeconds =
                                   data?['duration'] as int?;
@@ -277,6 +299,9 @@ class MainScreenState extends State<MainScreen> {
                                             _prefs?.getString('$fileId') != null
                                                 ? 'Progress: ${_prefs!.getString('$fileId')} ms'
                                                 : 'Not started yet',
+                                          ),
+                                          Text(
+                                            'Progress: ${progress.toStringAsFixed(1)}%',
                                           ),
                                         ],
                                       ),
