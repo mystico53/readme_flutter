@@ -83,6 +83,12 @@ class AudioPlayerViewModel extends ChangeNotifier {
     print("Saved progress: $position ms for file ID: $fileId.");
   }
 
+  Future<void> resetProgress(String fileId) async {
+    _maxReportedPosition = Duration.zero;
+    await saveProgress(fileId, Duration.zero);
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _periodicTimer?.cancel();

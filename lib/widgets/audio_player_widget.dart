@@ -231,6 +231,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   setState(() {
                     _currentPosition = Duration.zero;
                   });
+                  await widget.viewModel.resetProgress(widget.fileId);
                 },
                 child: IconButton(
                   onPressed: () async {

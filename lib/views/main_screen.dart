@@ -128,12 +128,13 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
+/*
   void _updateProgress() {
     setState(() {
       // Update the progress in the UI
       // You can access the progress using audioPlayerViewModel.lastProgressPercentage
     });
-  }
+  }*/
 
   @override
   void dispose() {
@@ -221,7 +222,7 @@ class MainScreenState extends State<MainScreen> {
                                   : 'endingP';
                               final title = data?['title'] as String?;
                               //final progress = data?['progress'] ?? 0;
-                              final progress = _fileProgress[fileId] ?? 0.0;
+                              //final progress = _fileProgress[fileId] ?? 0.0;
 
                               final durationInSeconds =
                                   data?['duration'] as int?;
@@ -300,9 +301,10 @@ class MainScreenState extends State<MainScreen> {
                                                 ? 'Progress time: ${_prefs!.getString('$fileId')} ms'
                                                 : 'Not started yet',
                                           ),
+                                          /*
                                           Text(
                                             'Progress listen: ${progress.toStringAsFixed(1)}%',
-                                          ),
+                                          ),*/
                                         ],
                                       ),
                                       trailing: status == 'ready'
