@@ -46,6 +46,7 @@ class MainScreenState extends State<MainScreen> {
         _prefs = prefs;
       });
     });
+
     _progressListener = () {
       final fileId = audioPlayerViewModel.currentFileId;
       final progress = audioPlayerViewModel.lastProgressPercentage;
@@ -229,6 +230,19 @@ class MainScreenState extends State<MainScreen> {
                               final formattedDuration =
                                   formatDuration(durationInSeconds);
 
+                              //calc progress in percent stuff
+                              final savedProgressString =
+                                  _prefs?.getString('$fileId');
+                              final savedProgress = savedProgressString != null
+                                  ? int.parse(savedProgressString)
+                                  : 0;
+                              final totalDuration =
+                                  Duration(seconds: durationInSeconds ?? 0);
+                              final progress = totalDuration.inSeconds > 0
+                                  ? (savedProgress /
+                                      totalDuration.inMilliseconds)
+                                  : 0.0;
+
                               return Container(
                                 margin: EdgeInsets.symmetric(horizontal: 5),
                                 decoration: BoxDecoration(
@@ -299,7 +313,7 @@ class MainScreenState extends State<MainScreen> {
                                           Text(
                                             _prefs?.getString('$fileId') != null
                                                 ? 'Progress time: ${_prefs!.getString('$fileId')} ms'
-                                                : 'Not started yet',
+                                                : 'Not listened to yet.',
                                           ),
                                           /*
                                           Text(
@@ -345,7 +359,21 @@ class MainScreenState extends State<MainScreen> {
                                         left: 0,
                                         right: 0,
                                         child: LinearProgressIndicator(
-                                          value: calculateProgress(status),
+                                          value: calculateStatus(status),
+                                          backgroundColor: Color(0xFFFFEFC3),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF4B473D)),
+                                          minHeight: 8.0,
+                                        ),
+                                      ),
+                                    if (status == 'ready')
+                                      Positioned(
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: LinearProgressIndicator(
+                                          value: progress,
                                           backgroundColor: Color(0xFFFFEFC3),
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
@@ -383,7 +411,7 @@ class MainScreenState extends State<MainScreen> {
     );
   }
 
-  double calculateProgress(String? status) {
+  double calculateStatus(String? status) {
     if (status == 'initiating file') return 0.1;
     if (status == 'processing text') return 0.2;
     if (status == 'generating title') return 0.4;
