@@ -32,12 +32,22 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   bool _isBuffering = false;
   bool _isAudioLoaded = false;
   String _errorMessage = '';
+  int _totalTimePlayed = 0;
+  DateTime? _startTime;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
+    _loadTotalTimePlayed();
     _initAudio();
+  }
+
+  Future<void> _loadTotalTimePlayed() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _totalTimePlayed = prefs.getInt('totaltimeplayed') ?? 0;
+    });
   }
 
   @override
@@ -87,6 +97,14 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         print("state: ${state.playing}");
       });
 
+      _audioPlayer.playingStream.listen((playing) {
+        if (playing) {
+          _startTrackingTotalTimePlayed();
+        } else {
+          _stopTrackingTotalTimePlayed();
+        }
+      });
+
       await _audioPlayer.play();
 
       _audioPlayer.processingStateStream.listen((state) {
@@ -104,8 +122,27 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     }
   }
 
+  Future<void> _startTrackingTotalTimePlayed() async {
+    _startTime = DateTime.now();
+  }
+
+  Future<void> _stopTrackingTotalTimePlayed() async {
+    if (_startTime != null) {
+      Duration playedDuration = DateTime.now().difference(_startTime!);
+      setState(() {
+        _totalTimePlayed += playedDuration.inSeconds;
+      });
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('totaltimeplayed', _totalTimePlayed);
+      print("total time played: $_totalTimePlayed);");
+
+      _startTime = null;
+    }
+  }
+
   @override
   void dispose() {
+    _stopTrackingTotalTimePlayed();
     _audioPlayer.dispose();
     super.dispose();
   }
