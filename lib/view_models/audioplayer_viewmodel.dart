@@ -10,6 +10,8 @@ class AudioPlayerViewModel extends ChangeNotifier {
   String? get currentFileId => _currentFileId;
   double get lastProgressPercentage => _lastProgressPercentage;
   Duration get maxReportedPosition => _maxReportedPosition ?? Duration.zero;
+  int _totalTimePlayed = 0;
+  int get totalTimePlayed => _totalTimePlayed;
 
   // Added SharedPreferences instance
   SharedPreferences? _prefs;
@@ -20,9 +22,16 @@ class AudioPlayerViewModel extends ChangeNotifier {
 
   // Asynchronously load the SharedPreferences instance
   Future<void> _loadPrefs() async {
-    print("Loading SharedPreferences...");
     _prefs = await SharedPreferences.getInstance();
-    print("SharedPreferences loaded.");
+    _totalTimePlayed = _prefs!.getInt('totaltimeplayed') ?? 0;
+    print("SharedPreferences loaded. Total time played: $_totalTimePlayed");
+  }
+
+  Future<void> updateTotalTimePlayed(int seconds) async {
+    _totalTimePlayed += seconds;
+    print("Total time played updated: $_totalTimePlayed");
+    await _prefs!.setInt('totaltimeplayed', _totalTimePlayed);
+    notifyListeners();
   }
 
   void startPeriodicUpdate(Duration totalDuration, String fileId) {
@@ -96,5 +105,18 @@ class AudioPlayerViewModel extends ChangeNotifier {
     _periodicTimer?.cancel();
     print("Disposing AudioPlayerViewModel and canceling timer.");
     super.dispose();
+  }
+
+  String formatDuration(int totalSeconds) {
+    final duration = Duration(seconds: totalSeconds);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    final hoursStr = hours > 0 ? '${hours}h ' : '';
+    final minutesStr = minutes > 0 ? '${minutes}m ' : '';
+    final secondsStr = seconds > 0 ? '${seconds}s' : '';
+
+    return '${hoursStr}${minutesStr}${secondsStr}'.trim();
   }
 }

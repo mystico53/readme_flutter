@@ -155,254 +155,283 @@ class MainScreenState extends State<MainScreen> {
         Provider.of<GenerateDialogViewModel>(context);
     final userIdViewModel = Provider.of<UserIdViewModel>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF4B473D),
-        title: Text(
-          'Lisme',
-          style: TextStyle(
-            fontSize: 32,
-            height: 1.2,
-            color: Color(0xFFFFEFC3),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _showFeedback(context);
-            },
-            child: Text(
-              'Give Feedback',
-              style: TextStyle(color: Color(0xFFFFEFC3)),
+    return Consumer<AudioPlayerViewModel>(
+      builder: (context, audioPlayerViewModel, child) {
+        final formattedDuration = audioPlayerViewModel
+            .formatDuration(audioPlayerViewModel.totalTimePlayed);
+
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Color(0xFF4B473D),
+            title: Row(
+              children: [
+                Text(
+                  'Lisme',
+                  style: TextStyle(
+                    fontSize: 32,
+                    height: 1.2,
+                    color: Color(0xFFFFEFC3),
+                  ),
+                ),
+                SizedBox(width: 60),
+                Text(
+                  'Listened: ${audioPlayerViewModel.totalTimePlayed} sec',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFFFEFC3),
+                  ),
+                ),
+              ],
             ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _showFeedback(context);
+                },
+                child: Text(
+                  'Give Feedback',
+                  style: TextStyle(color: Color(0xFFFFEFC3)),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: userIdViewModel.userId.isNotEmpty
-                ? StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('audioFiles')
-                        .where('userId', isEqualTo: userIdViewModel.userId)
-                        .orderBy('created_at', descending: false)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final documents = snapshot.data!.docs;
-                        if (documents.isEmpty) {
-                          return ListTile(
-                            title: Text('Learn how to create your first lisme'),
-                            trailing: Icon(Icons.tips_and_updates),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                  context, '/intropages/intropage_main');
-                            },
-                          );
-                        }
+          body: Column(
+            children: <Widget>[
+              Expanded(
+                child: userIdViewModel.userId.isNotEmpty
+                    ? StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('audioFiles')
+                            .where('userId', isEqualTo: userIdViewModel.userId)
+                            .orderBy('created_at', descending: false)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            final documents = snapshot.data!.docs;
+                            if (documents.isEmpty) {
+                              return ListTile(
+                                title: Text(
+                                    'Learn how to create your first lisme'),
+                                trailing: Icon(Icons.tips_and_updates),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                      context, '/intropages/intropage_main');
+                                },
+                              );
+                            }
 
-                        return Padding(
-                          padding: EdgeInsets.only(top: 5),
-                          child: ListView.separated(
-                            controller: _scrollController,
-                            itemCount: documents.length,
-                            separatorBuilder: (context, index) =>
-                                SizedBox(height: 5),
-                            itemBuilder: (context, index) {
-                              final document = documents[index];
-                              final fileId = document.id;
-                              final data =
-                                  document.data() as Map<String, dynamic>?;
-                              final status = data?['status'] as String?;
-                              final createdAt =
-                                  data?['created_at'] as Timestamp?;
-                              final formattedCreatedAt = createdAt != null
-                                  ? DateFormat('MMMM d, yyyy, h:mm a')
-                                      .format(createdAt.toDate())
-                                  : 'endingP';
-                              final title = data?['title'] as String?;
-                              //final progress = data?['progress'] ?? 0;
-                              //final progress = _fileProgress[fileId] ?? 0.0;
+                            return Padding(
+                              padding: EdgeInsets.only(top: 5),
+                              child: ListView.separated(
+                                controller: _scrollController,
+                                itemCount: documents.length,
+                                separatorBuilder: (context, index) =>
+                                    SizedBox(height: 5),
+                                itemBuilder: (context, index) {
+                                  final document = documents[index];
+                                  final fileId = document.id;
+                                  final data =
+                                      document.data() as Map<String, dynamic>?;
+                                  final status = data?['status'] as String?;
+                                  final createdAt =
+                                      data?['created_at'] as Timestamp?;
+                                  final formattedCreatedAt = createdAt != null
+                                      ? DateFormat('MMMM d, yyyy, h:mm a')
+                                          .format(createdAt.toDate())
+                                      : 'endingP';
+                                  final title = data?['title'] as String?;
+                                  //final progress = data?['progress'] ?? 0;
+                                  //final progress = _fileProgress[fileId] ?? 0.0;
 
-                              final durationInSeconds =
-                                  data?['duration'] as int?;
-                              final formattedDuration =
-                                  formatDuration(durationInSeconds);
+                                  final durationInSeconds =
+                                      data?['duration'] as int?;
+                                  final formattedDuration =
+                                      formatDuration(durationInSeconds);
 
-                              //calc progress in percent stuff
-                              final savedProgressString =
-                                  _prefs?.getString('$fileId');
-                              final savedProgress = savedProgressString != null
-                                  ? int.parse(savedProgressString)
-                                  : 0;
-                              final totalDuration =
-                                  Duration(seconds: durationInSeconds ?? 0);
-                              final progress = totalDuration.inSeconds > 0
-                                  ? (savedProgress /
-                                      totalDuration.inMilliseconds)
-                                  : 0.0;
+                                  //calc progress in percent stuff
+                                  final savedProgressString =
+                                      _prefs?.getString('$fileId');
+                                  final savedProgress =
+                                      savedProgressString != null
+                                          ? int.parse(savedProgressString)
+                                          : 0;
+                                  final totalDuration =
+                                      Duration(seconds: durationInSeconds ?? 0);
+                                  final progress = totalDuration.inSeconds > 0
+                                      ? (savedProgress /
+                                          totalDuration.inMilliseconds)
+                                      : 0.0;
 
-                              return Container(
-                                margin: EdgeInsets.symmetric(horizontal: 5),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Color(0xFF4B473D),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    ListTile(
-                                      title:
-                                          Text(title ?? 'New Lisme is created'),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
+                                  return Container(
+                                    margin: EdgeInsets.symmetric(horizontal: 5),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Color(0xFF4B473D),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        ListTile(
+                                          title: Text(
+                                              title ?? 'New Lisme is created'),
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              if (status != 'ready')
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 8.0),
-                                                  child: SizedBox(
-                                                    width: 16,
-                                                    height: 16,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 2,
+                                              Row(
+                                                children: [
+                                                  if (status != 'ready')
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              right: 8.0),
+                                                      child: SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  Text(
+                                                    'Status: ${status ?? 'Preparing'}',
+                                                    style: TextStyle(
+                                                      color: status == 'error'
+                                                          ? Colors.red
+                                                          : null,
                                                     ),
                                                   ),
-                                                ),
-                                              Text(
-                                                'Status: ${status ?? 'Preparing'}',
-                                                style: TextStyle(
-                                                  color: status == 'error'
-                                                      ? Colors.red
-                                                      : null,
-                                                ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              Text('$formattedCreatedAt'),
-                                              SizedBox(width: 8),
-                                              IconButton(
-                                                icon: Icon(Icons.delete,
-                                                    size: 16),
-                                                onPressed: () async {
-                                                  print(
-                                                      "Deleting document with ID: $fileId");
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('audioFiles')
-                                                      .doc(fileId)
-                                                      .delete();
-                                                },
+                                              Row(
+                                                children: [
+                                                  Text('$formattedCreatedAt'),
+                                                  SizedBox(width: 8),
+                                                  IconButton(
+                                                    icon: Icon(Icons.delete,
+                                                        size: 16),
+                                                    onPressed: () async {
+                                                      print(
+                                                          "Deleting document with ID: $fileId");
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection(
+                                                              'audioFiles')
+                                                          .doc(fileId)
+                                                          .delete();
+                                                    },
+                                                  ),
+                                                  SizedBox(width: 8),
+                                                  if (formattedDuration
+                                                      .isNotEmpty)
+                                                    Text('$formattedDuration'),
+                                                  SizedBox(width: 8),
+                                                  // Fetch and display saved progress
+                                                ],
                                               ),
-                                              SizedBox(width: 8),
-                                              if (formattedDuration.isNotEmpty)
-                                                Text('$formattedDuration'),
-                                              SizedBox(width: 8),
-                                              // Fetch and display saved progress
-                                            ],
-                                          ),
-                                          /*
+                                              /*
                                           Text(
                                             'Progress listen: ${progress.toStringAsFixed(1)}%',
                                           ),*/
-                                        ],
-                                      ),
-                                      trailing: status == 'ready'
-                                          ? CircleAvatar(
+                                            ],
+                                          ),
+                                          trailing: status == 'ready'
+                                              ? CircleAvatar(
+                                                  backgroundColor:
+                                                      Color(0xFF4B473D),
+                                                  child: IconButton(
+                                                    icon: Icon(Icons.play_arrow,
+                                                        color:
+                                                            Color(0xFFFFEFC3)),
+                                                    onPressed: () async {
+                                                      final httpsUrl =
+                                                          data?['httpsUrl']
+                                                              as String?;
+                                                      final title =
+                                                          data?['title']
+                                                              as String?;
+                                                      if (httpsUrl != null &&
+                                                          httpsUrl.isNotEmpty &&
+                                                          title != null) {
+                                                        setState(() {
+                                                          selectedAudioUrl =
+                                                              httpsUrl;
+                                                          selectedAudioTitle =
+                                                              title;
+                                                          selectedFileId =
+                                                              fileId;
+                                                        });
+                                                      } else {
+                                                        print(
+                                                            'Audio URL or title is missing or invalid for document: $fileId');
+                                                      }
+                                                    },
+                                                  ),
+                                                )
+                                              : Icon(Icons.hourglass_empty),
+                                        ),
+                                        if (status != 'ready')
+                                          Positioned(
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            child: LinearProgressIndicator(
+                                              value: calculateStatus(status),
                                               backgroundColor:
-                                                  Color(0xFF4B473D),
-                                              child: IconButton(
-                                                icon: Icon(Icons.play_arrow,
-                                                    color: Color(0xFFFFEFC3)),
-                                                onPressed: () async {
-                                                  final httpsUrl =
-                                                      data?['httpsUrl']
-                                                          as String?;
-                                                  final title =
-                                                      data?['title'] as String?;
-                                                  if (httpsUrl != null &&
-                                                      httpsUrl.isNotEmpty &&
-                                                      title != null) {
-                                                    setState(() {
-                                                      selectedAudioUrl =
-                                                          httpsUrl;
-                                                      selectedAudioTitle =
-                                                          title;
-                                                      selectedFileId = fileId;
-                                                    });
-                                                  } else {
-                                                    print(
-                                                        'Audio URL or title is missing or invalid for document: $fileId');
-                                                  }
-                                                },
-                                              ),
-                                            )
-                                          : Icon(Icons.hourglass_empty),
+                                                  Color(0xFFFFEFC3),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Color(0xFF4B473D)),
+                                              minHeight: 8.0,
+                                            ),
+                                          ),
+                                        if (status == 'ready')
+                                          Positioned(
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            child: LinearProgressIndicator(
+                                              value: progress,
+                                              backgroundColor:
+                                                  Color(0xFFFFEFC3),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Color(0xFF4B473D)),
+                                              minHeight: 8.0,
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                    if (status != 'ready')
-                                      Positioned(
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: LinearProgressIndicator(
-                                          value: calculateStatus(status),
-                                          backgroundColor: Color(0xFFFFEFC3),
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Color(0xFF4B473D)),
-                                          minHeight: 8.0,
-                                        ),
-                                      ),
-                                    if (status == 'ready')
-                                      Positioned(
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: LinearProgressIndicator(
-                                          value: progress,
-                                          backgroundColor: Color(0xFFFFEFC3),
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Color(0xFF4B473D)),
-                                          minHeight: 8.0,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      } else if (snapshot.hasError) {
-                        // Log the error
-                        print("Error fetching documents: ${snapshot.error}");
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        // Log the loading state
-                        print("Waiting for documents...");
-                        return CircularProgressIndicator();
-                      }
-                    },
-                  )
-                : Center(child: CircularProgressIndicator()),
+                                  );
+                                },
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            // Log the error
+                            print(
+                                "Error fetching documents: ${snapshot.error}");
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            // Log the loading state
+                            print("Waiting for documents...");
+                            return CircularProgressIndicator();
+                          }
+                        },
+                      )
+                    : Center(child: CircularProgressIndicator()),
+              ),
+              AudioPlayerWidget(
+                audioUrl: selectedAudioUrl,
+                audioTitle: selectedAudioTitle,
+                fileId: selectedFileId,
+                viewModel: audioPlayerViewModel,
+              ),
+            ],
           ),
-          AudioPlayerWidget(
-            audioUrl: selectedAudioUrl,
-            audioTitle: selectedAudioTitle,
-            fileId: selectedFileId,
-            viewModel: audioPlayerViewModel,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
