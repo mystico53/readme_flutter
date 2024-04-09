@@ -3,12 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AudioPlayerViewModel extends ChangeNotifier {
-  late Duration _maxReportedPosition;
+  late Duration _maxReportedPosition = Duration.zero;
   double _lastProgressPercentage = 0.0;
   Timer? _periodicTimer;
   String? _currentFileId;
   String? get currentFileId => _currentFileId;
   double get lastProgressPercentage => _lastProgressPercentage;
+  Duration get maxReportedPosition => _maxReportedPosition ?? Duration.zero;
 
   // Added SharedPreferences instance
   SharedPreferences? _prefs;
@@ -31,6 +32,7 @@ class AudioPlayerViewModel extends ChangeNotifier {
 
     // Load the saved progress from SharedPreferences
     _loadSavedProgress(fileId).then((savedPosition) {
+      // Initialize _maxReportedPosition if it hasn't been initialized yet
       _maxReportedPosition = savedPosition ?? Duration.zero;
       print(
           "Loaded saved progress: $_maxReportedPosition ms for file ID: $fileId");

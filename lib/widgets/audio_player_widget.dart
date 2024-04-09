@@ -8,6 +8,8 @@ class AudioPlayerWidget extends StatefulWidget {
   final String audioTitle;
   final String fileId;
 
+  Duration get maxReportedPosition => viewModel.maxReportedPosition;
+
   final AudioPlayerViewModel viewModel;
 
   AudioPlayerWidget({
@@ -134,6 +136,11 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         : newPosition.inMilliseconds.toDouble());
   }
 
+  void _jumpToMaxReportedPosition() {
+    final maxReportedPosition = widget.viewModel.maxReportedPosition;
+    _seekAudio(maxReportedPosition.inMilliseconds.toDouble());
+  }
+
   @override
   Widget build(BuildContext context) {
     String totalDurationString = _formatDuration(_totalDuration);
@@ -142,6 +149,12 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     double currentPositionValue = _currentPosition.inMilliseconds.toDouble();
     double totalDurationValue = _totalDuration.inMilliseconds.toDouble();
     currentPositionValue = currentPositionValue.clamp(0.0, totalDurationValue);
+
+    final maxReportedPositionValue =
+        widget.maxReportedPosition.inMilliseconds.toDouble();
+    final maxReportedPositionPercentage = totalDurationValue > 0
+        ? maxReportedPositionValue / totalDurationValue
+        : 0.0;
 
     return Container(
       color: Color(0xFF4B473D),
@@ -206,7 +219,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                           inactiveTrackColor: Colors.transparent,
                         ),
                         child: Slider(
-                          value: currentPositionValue,
+                          value: maxReportedPositionPercentage,
                           min: 0.0,
                           max: totalDurationValue,
                           onChanged: _seekAudio,
@@ -282,6 +295,16 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               IconButton(
                 onPressed: _jumpForward,
                 icon: Icon(Icons.forward_10, color: Color(0xFFFFEFC3)),
+              ),
+              SizedBox(width: 10),
+              IconButton(
+                onPressed: _jumpToMaxReportedPosition,
+                icon: Icon(Icons.skip_next, color: Color(0xFFFFEFC3)),
+              ),
+              SizedBox(width: 10),
+              Text(
+                '${(maxReportedPositionPercentage * 100).toStringAsFixed(1)}%',
+                style: TextStyle(color: Color(0xFFFFEFC3)),
               ),
             ],
           ),

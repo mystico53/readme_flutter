@@ -310,11 +310,6 @@ class MainScreenState extends State<MainScreen> {
                                               // Fetch and display saved progress
                                             ],
                                           ),
-                                          Text(
-                                            _prefs?.getString('$fileId') != null
-                                                ? 'Progress time: ${_prefs!.getString('$fileId')} ms'
-                                                : 'Not listened to yet.',
-                                          ),
                                           /*
                                           Text(
                                             'Progress listen: ${progress.toStringAsFixed(1)}%',
