@@ -150,6 +150,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     double totalDurationValue = _totalDuration.inMilliseconds.toDouble();
     currentPositionValue = currentPositionValue.clamp(0.0, totalDurationValue);
 
+    //this can be used to get the saved progress and visualize it in the slider
     final maxReportedPositionValue =
         widget.maxReportedPosition.inMilliseconds.toDouble();
     final maxReportedPositionPercentage = totalDurationValue > 0
@@ -219,7 +220,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                           inactiveTrackColor: Colors.transparent,
                         ),
                         child: Slider(
-                          value: maxReportedPositionPercentage,
+                          value: currentPositionValue,
                           min: 0.0,
                           max: totalDurationValue,
                           onChanged: _seekAudio,
@@ -302,10 +303,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 icon: Icon(Icons.skip_next, color: Color(0xFFFFEFC3)),
               ),
               SizedBox(width: 10),
-              Text(
-                '${(maxReportedPositionPercentage * 100).toStringAsFixed(1)}%',
-                style: TextStyle(color: Color(0xFFFFEFC3)),
-              ),
             ],
           ),
         ],
