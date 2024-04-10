@@ -26,13 +26,44 @@ class _WebViewPageState extends State<WebViewPage> {
           },
           onNavigationRequest: (NavigationRequest request) {
             // Handle mixed content and other navigation requests
-            // Return a NavigationDecision value
             return NavigationDecision.navigate;
+          },
+          onPageFinished: (String url) {
+            _scrapeTextContent();
           },
         ),
       )
       ..setUserAgent(
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36');
+  }
+
+  void _scrapeTextContent() async {
+    try {
+      final String textContent =
+          await _controller.runJavaScriptReturningResult('''
+      (function() {
+        try {
+          var text = "";
+          var elements = document.getElementsByTagName("*");
+          for (var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+            if (element.innerText) {
+              text += element.innerText + "\\n";
+            }
+          }
+          return text;
+        } catch (error) {
+          console.error("JavaScript error:", error);
+          return "";
+        }
+      })();
+    ''') as String;
+
+      print('Text Content:');
+      print(textContent);
+    } catch (error) {
+      print('Error scraping text content: $error');
+    }
   }
 
   @override
