@@ -20,9 +20,20 @@ class IntentViewModel with ChangeNotifier {
 
       _sharedFiles = files;
 
+      if (_sharedFiles.isNotEmpty) {
+        String firstLine = _sharedFiles[0].path;
+        if (isValidUrl(firstLine)) {
+          print("url found in first line");
+        } else {
+          // Print the content of the shared files
+          for (var file in _sharedFiles) {
+            print("Shared file path: ${file.path}");
+          }
+        }
+      }
+
       notifyListeners();
     }, onError: (err) {
-      // Existing error message
       print("Error listening for intents: $err");
     });
   }
@@ -51,5 +62,9 @@ class IntentViewModel with ChangeNotifier {
   void dispose() {
     _intentSub.cancel();
     super.dispose();
+  }
+
+  bool isValidUrl(String url) {
+    return Uri.parse(url).isAbsolute;
   }
 }

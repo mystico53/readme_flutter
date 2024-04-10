@@ -159,7 +159,6 @@ class MainScreenState extends State<MainScreen> {
       builder: (context, audioPlayerViewModel, child) {
         final formattedDuration = audioPlayerViewModel
             .formatDuration(audioPlayerViewModel.totalTimePlayed);
-        print("formatted duration $formattedDuration");
 
         return Scaffold(
           appBar: AppBar(
@@ -176,7 +175,7 @@ class MainScreenState extends State<MainScreen> {
                 ),
                 SizedBox(width: 60),
                 Text(
-                  'Listened: $formattedDuration',
+                  'Air time: $formattedDuration',
                   style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFFFFEFC3),
