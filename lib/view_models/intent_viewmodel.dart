@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:readme_app/views/webview.dart';
 import '../services/intent_service.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -24,11 +25,12 @@ class IntentViewModel with ChangeNotifier {
         String firstLine = _sharedFiles[0].path;
         if (isValidUrl(firstLine)) {
           print("url found in first line");
-        } else {
-          // Print the content of the shared files
-          for (var file in _sharedFiles) {
-            print("Shared file path: ${file.path}");
-          }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WebViewPage(url: firstLine),
+            ),
+          );
         }
       }
 

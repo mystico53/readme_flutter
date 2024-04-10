@@ -34,6 +34,7 @@ class MainScreenState extends State<MainScreen> {
   SharedPreferences? _prefs;
   late VoidCallback _progressListener;
   Map<String, double> _fileProgress = {};
+  IntentViewModel? _intentViewModel; //for webview only
 
   @override
   void initState() {
@@ -41,6 +42,8 @@ class MainScreenState extends State<MainScreen> {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.addListener(_handleIntentViewModelChange);
+    _intentViewModel = intentViewModel; //for webview only
+    _intentViewModel!.startListeningForIntents(context); //for webview only
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
         _prefs = prefs;
@@ -143,6 +146,7 @@ class MainScreenState extends State<MainScreen> {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.removeListener(_handleIntentViewModelChange);
+    _intentViewModel?.removeListener(_handleIntentViewModelChange);
     audioPlayerViewModel.removeListener(_progressListener);
     super.dispose();
   }
