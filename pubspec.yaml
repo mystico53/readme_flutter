@@ -26,6 +26,7 @@ dependencies:
   google_fonts: ^6.2.1
   just_audio: ^0.9.36
   webview_flutter: ^4.7.0
+  chaleno: ^0.0.8
 
 dev_dependencies:
   flutter_test:
