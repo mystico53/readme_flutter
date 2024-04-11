@@ -25,16 +25,18 @@ class IntentViewModel with ChangeNotifier {
         String firstLine = _sharedFiles[0].path;
         if (isValidUrl(firstLine)) {
           print("url found in first line");
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WebViewPage(url: firstLine),
-            ),
-          );
+          Future.delayed(const Duration(milliseconds: 500), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WebViewPage(url: firstLine),
+              ),
+            );
+          });
+        } else {
+          notifyListeners();
         }
       }
-
-      notifyListeners();
     }, onError: (err) {
       print("Error listening for intents: $err");
     });
