@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:provider/provider.dart';
+import '../view_models/generate_dialog_viewmodel.dart';
+import '../models/voice_model.dart';
+import '../view_models/user_id_viewmodel.dart';
 
 class WebViewPage extends StatefulWidget {
   final String url;
@@ -13,10 +17,14 @@ class WebViewPage extends StatefulWidget {
 class _WebViewPageState extends State<WebViewPage> {
   late final WebViewController _controller;
   String _textContent = '';
+  late final GenerateDialogViewModel _generateDialogViewModel;
 
   @override
   void initState() {
     super.initState();
+    final userId = Provider.of<UserIdViewModel>(context, listen: false).userId;
+    _generateDialogViewModel = GenerateDialogViewModel(userId);
+
     _controller = WebViewController()
       ..clearCache()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -44,23 +52,20 @@ class _WebViewPageState extends State<WebViewPage> {
     try {
       final String textContent =
           await _controller.runJavaScriptReturningResult('''
-        (function() {
-          try {
-            var paragraphs = document.querySelectorAll('p');
-            var text = "";
-            for (var i = 0; i < paragraphs.length; i++) {
-              text += paragraphs[i].innerText + "\\n\\n";
-            }
-            return text;
-          } catch (error) {
-            console.error("JavaScript error:", error);
-            return "";
-          }
-        })();
-      ''') as String;
+      (function() {
+        try {
+          return document.body.innerText;
+        } catch (error) {
+          console.error("JavaScript error:", error);
+          return "";
+        }
+      })();
+    ''') as String;
+
       setState(() {
-        _textContent = textContent;
+        _textContent = _formatText(textContent);
       });
+
       print('Text Content:');
       print(textContent);
     } catch (error) {
@@ -68,11 +73,36 @@ class _WebViewPageState extends State<WebViewPage> {
     }
   }
 
+  String _formatText(String text) {
+    String formattedText = text.replaceAll('\\n\\n', '\n\n');
+    return formattedText;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userId = Provider.of<UserIdViewModel>(context).userId;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('WebView'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final generateDialogViewModel =
+                  Provider.of<GenerateDialogViewModel>(context, listen: false);
+              generateDialogViewModel.generateAndCheckAudio(
+                _textContent,
+                generateDialogViewModel.currentSelectedVoice,
+                userId,
+              );
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Confirm',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:readme_app/views/webview.dart';
 import '../services/intent_service.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import '../view_models/user_id_viewmodel.dart';
 
 class IntentViewModel with ChangeNotifier {
   final IntentService _intentService = IntentService();
@@ -18,9 +20,7 @@ class IntentViewModel with ChangeNotifier {
     _intentSub = _intentService.getSharedFilesStream().listen((files) {
       // Debug message to log the files received
       print("Received shared files: ${files.length} files");
-
       _sharedFiles = files;
-
       if (_sharedFiles.isNotEmpty) {
         String firstLine = _sharedFiles[0].path;
         if (isValidUrl(firstLine)) {
@@ -29,7 +29,10 @@ class IntentViewModel with ChangeNotifier {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => WebViewPage(url: firstLine),
+                builder: (context) => ChangeNotifierProvider(
+                  create: (context) => UserIdViewModel()..initUserId(),
+                  child: WebViewPage(url: firstLine),
+                ),
               ),
             );
           });
