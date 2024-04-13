@@ -135,12 +135,12 @@ class MainScreenState extends State<MainScreen> {
           feedback.screenshot,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Feedback submitted successfully')),
+          const SnackBar(content: Text('Feedback submitted successfully')),
         );
       } catch (error) {
         print('Error submitting feedback: $error');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting feedback')),
+          const SnackBar(content: Text('Error submitting feedback')),
         );
       }
     });
@@ -198,11 +198,18 @@ class MainScreenState extends State<MainScreen> {
                   ),
                 ),
                 SizedBox(width: 60),
-                Text(
-                  'Air time: $formattedDuration',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFFFFEFC3),
+                GestureDetector(
+                  onTap: () {
+                    final dynamic tooltip = TooltipState.of(context);
+                    tooltip?.ensureTooltipVisible();
+                  },
+                  child: Tooltip(
+                    message: 'Air time: $formattedDuration',
+                    child: const Icon(
+                      Icons.earbuds_rounded,
+                      size: 24,
+                      color: Color(0xFFFFEFC3),
+                    ),
                   ),
                 ),
               ],
@@ -212,7 +219,7 @@ class MainScreenState extends State<MainScreen> {
                 onPressed: () {
                   _showFeedback(context);
                 },
-                child: Text(
+                child: const Text(
                   'Give Feedback',
                   style: TextStyle(color: Color(0xFFFFEFC3)),
                 ),
@@ -234,9 +241,9 @@ class MainScreenState extends State<MainScreen> {
                             final documents = snapshot.data!.docs;
                             if (documents.isEmpty) {
                               return ListTile(
-                                title: Text(
+                                title: const Text(
                                     'Learn how to create your first lisme'),
-                                trailing: Icon(Icons.tips_and_updates),
+                                trailing: const Icon(Icons.tips_and_updates),
                                 onTap: () {
                                   Navigator.pushNamed(
                                       context, '/intropages/intropage_main');
@@ -245,12 +252,12 @@ class MainScreenState extends State<MainScreen> {
                             }
 
                             return Padding(
-                              padding: EdgeInsets.only(top: 5),
+                              padding: const EdgeInsets.only(top: 5),
                               child: ListView.separated(
                                 controller: _scrollController,
                                 itemCount: documents.length,
                                 separatorBuilder: (context, index) =>
-                                    SizedBox(height: 5),
+                                    const SizedBox(height: 5),
                                 itemBuilder: (context, index) {
                                   final document = documents[index];
                                   final fileId = document.id;
@@ -287,10 +294,11 @@ class MainScreenState extends State<MainScreen> {
                                       : 0.0;
 
                                   return Container(
-                                    margin: EdgeInsets.symmetric(horizontal: 5),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 5),
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: Color(0xFF4B473D),
+                                        color: const Color(0xFF4B473D),
                                         width: 1.5,
                                       ),
                                     ),
@@ -306,10 +314,9 @@ class MainScreenState extends State<MainScreen> {
                                               Row(
                                                 children: [
                                                   if (status != 'ready')
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              right: 8.0),
+                                                    const Padding(
+                                                      padding: EdgeInsets.only(
+                                                          right: 8.0),
                                                       child: SizedBox(
                                                         width: 16,
                                                         height: 16,
@@ -332,9 +339,10 @@ class MainScreenState extends State<MainScreen> {
                                               Row(
                                                 children: [
                                                   Text('$formattedCreatedAt'),
-                                                  SizedBox(width: 8),
+                                                  const SizedBox(width: 8),
                                                   IconButton(
-                                                    icon: Icon(Icons.delete,
+                                                    icon: const Icon(
+                                                        Icons.delete,
                                                         size: 16),
                                                     onPressed: () async {
                                                       print(
@@ -347,11 +355,11 @@ class MainScreenState extends State<MainScreen> {
                                                           .delete();
                                                     },
                                                   ),
-                                                  SizedBox(width: 8),
+                                                  const SizedBox(width: 8),
                                                   if (formattedDuration
                                                       .isNotEmpty)
                                                     Text('$formattedDuration'),
-                                                  SizedBox(width: 8),
+                                                  const SizedBox(width: 8),
                                                   // Fetch and display saved progress
                                                 ],
                                               ),
@@ -364,9 +372,10 @@ class MainScreenState extends State<MainScreen> {
                                           trailing: status == 'ready'
                                               ? CircleAvatar(
                                                   backgroundColor:
-                                                      Color(0xFF4B473D),
+                                                      const Color(0xFF4B473D),
                                                   child: IconButton(
-                                                    icon: Icon(Icons.play_arrow,
+                                                    icon: const Icon(
+                                                        Icons.play_arrow,
                                                         color:
                                                             Color(0xFFFFEFC3)),
                                                     onPressed: () async {
@@ -394,7 +403,8 @@ class MainScreenState extends State<MainScreen> {
                                                     },
                                                   ),
                                                 )
-                                              : Icon(Icons.hourglass_empty),
+                                              : const Icon(
+                                                  Icons.hourglass_empty),
                                         ),
                                         if (status != 'ready')
                                           Positioned(
@@ -404,10 +414,10 @@ class MainScreenState extends State<MainScreen> {
                                             child: LinearProgressIndicator(
                                               value: calculateStatus(status),
                                               backgroundColor:
-                                                  Color(0xFFFFEFC3),
+                                                  const Color(0xFFFFEFC3),
                                               valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                      Color(0xFF4B473D)),
+                                                  const AlwaysStoppedAnimation<
+                                                      Color>(Color(0xFF4B473D)),
                                               minHeight: 8.0,
                                             ),
                                           ),
@@ -419,10 +429,10 @@ class MainScreenState extends State<MainScreen> {
                                             child: LinearProgressIndicator(
                                               value: progress,
                                               backgroundColor:
-                                                  Color(0xFFFFEFC3),
+                                                  const Color(0xFFFFEFC3),
                                               valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                      Color(0xFF4B473D)),
+                                                  const AlwaysStoppedAnimation<
+                                                      Color>(Color(0xFF4B473D)),
                                               minHeight: 8.0,
                                             ),
                                           ),
@@ -440,11 +450,11 @@ class MainScreenState extends State<MainScreen> {
                           } else {
                             // Log the loading state
                             print("Waiting for documents...");
-                            return CircularProgressIndicator();
+                            return const CircularProgressIndicator();
                           }
                         },
                       )
-                    : Center(child: CircularProgressIndicator()),
+                    : const Center(child: CircularProgressIndicator()),
               ),
               AudioPlayerWidget(
                 audioUrl: selectedAudioUrl,
