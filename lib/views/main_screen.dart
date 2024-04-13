@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:feedback/feedback.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
+import 'package:readme_app/views/webview.dart';
 import '../services/feedback_service.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
@@ -42,8 +43,8 @@ class MainScreenState extends State<MainScreen> {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.addListener(_handleIntentViewModelChange);
-    _intentViewModel = intentViewModel; //for webview only
-    _intentViewModel!.startListeningForIntents(context); //for webview only
+    //_intentViewModel = intentViewModel; //for webview only
+    //_intentViewModel!.startListeningForIntents(context); //for webview only
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
         _prefs = prefs;
@@ -62,6 +63,7 @@ class MainScreenState extends State<MainScreen> {
     audioPlayerViewModel.addListener(_progressListener);
   }
 
+/*
   void checkForSharedFiles() {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
@@ -81,13 +83,39 @@ class MainScreenState extends State<MainScreen> {
         isDialogOpen = false;
       });
     }
-  }
+  }*/
 
   void _handleIntentViewModelChange() {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     if (intentViewModel.sharedFiles.isNotEmpty) {
-      checkForSharedFiles();
+      if (isDialogOpen) {
+        // Close the current dialog
+        Navigator.pop(context);
+      }
+      final firstLine = intentViewModel.sharedFiles[0].path;
+      if (intentViewModel.isValidUrl(firstLine)) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChangeNotifierProvider(
+              create: (context) => UserIdViewModel()..initUserId(),
+              child: WebViewPage(url: firstLine),
+            ),
+          ),
+        );
+      } else {
+        // Open the GenerateDialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            isDialogOpen = true;
+            return const GenerateDialog();
+          },
+        ).then((_) {
+          isDialogOpen = false;
+        });
+      }
     }
   }
 
@@ -131,14 +159,6 @@ class MainScreenState extends State<MainScreen> {
       return '$minutes min ${seconds > 0 ? '$seconds sec' : ''}';
     }
   }
-
-/*
-  void _updateProgress() {
-    setState(() {
-      // Update the progress in the UI
-      // You can access the progress using audioPlayerViewModel.lastProgressPercentage
-    });
-  }*/
 
   @override
   void dispose() {

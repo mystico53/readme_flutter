@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:readme_app/views/webview.dart';
+
 import '../services/intent_service.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import '../view_models/user_id_viewmodel.dart';
 
 class IntentViewModel with ChangeNotifier {
   final IntentService _intentService = IntentService();
@@ -21,25 +19,7 @@ class IntentViewModel with ChangeNotifier {
       // Debug message to log the files received
       print("Received shared files: ${files.length} files");
       _sharedFiles = files;
-      if (_sharedFiles.isNotEmpty) {
-        String firstLine = _sharedFiles[0].path;
-        if (isValidUrl(firstLine)) {
-          print("url found in first line");
-          Future.delayed(const Duration(milliseconds: 500), () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChangeNotifierProvider(
-                  create: (context) => UserIdViewModel()..initUserId(),
-                  child: WebViewPage(url: firstLine),
-                ),
-              ),
-            );
-          });
-        } else {
-          notifyListeners();
-        }
-      }
+      notifyListeners();
     }, onError: (err) {
       print("Error listening for intents: $err");
     });
@@ -72,6 +52,13 @@ class IntentViewModel with ChangeNotifier {
   }
 
   bool isValidUrl(String url) {
-    return Uri.parse(url).isAbsolute;
+    try {
+      return Uri.parse(url).isAbsolute &&
+          (url.startsWith('http://') || url.startsWith('https://'));
+    } catch (e) {
+      // Log the error or handle it appropriately if needed
+      print('Not a URL format: $e');
+      return false;
+    }
   }
 }

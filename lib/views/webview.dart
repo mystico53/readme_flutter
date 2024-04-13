@@ -18,6 +18,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late final WebViewController _controller;
   String _textContent = '';
   late final GenerateDialogViewModel _generateDialogViewModel;
+  double _progress = 0.0;
 
   @override
   void initState() {
@@ -41,6 +42,11 @@ class _WebViewPageState extends State<WebViewPage> {
           onPageFinished: (String url) {
             _scrapeTextContent();
           },
+          onProgress: (int progress) {
+            setState(() {
+              _progress = progress / 100.0;
+            });
+          },
         ),
       )
       ..setUserAgent(
@@ -63,7 +69,9 @@ class _WebViewPageState extends State<WebViewPage> {
     ''') as String;
 
       setState(() {
-        _textContent = _formatText(textContent);
+        //_textContent = _formatText(textContent); replace /n/n with linebreaks
+        _textContent = textContent;
+        print("now the text should appear in textbox");
       });
 
       print('Text Content:');
@@ -99,13 +107,19 @@ class _WebViewPageState extends State<WebViewPage> {
             },
             child: const Text(
               'Confirm',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ],
       ),
       body: Column(
         children: [
+          if (_progress < 1.0)
+            LinearProgressIndicator(
+              value: _progress,
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
           Expanded(
             child: WebViewWidget(
               controller: _controller,
