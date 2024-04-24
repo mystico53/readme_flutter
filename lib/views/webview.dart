@@ -121,6 +121,13 @@ class _WebViewPageState extends State<WebViewPage> {
       ),
       body: Column(
         children: [
+          VoiceSelectionWidget(
+            onSelectedVoiceChanged: (VoiceModel voice) {
+              print("Updating selected voice to: ${voice.name}");
+              Provider.of<GenerateDialogViewModel>(context, listen: false)
+                  .updateSelectedVoice(voice);
+            },
+          ),
           if (_progress < 1.0)
             LinearProgressIndicator(
               value: _progress,
@@ -141,15 +148,6 @@ class _WebViewPageState extends State<WebViewPage> {
                 ),
               ),
             ),
-          Expanded(
-            child: VoiceSelectionWidget(
-              onSelectedVoiceChanged: (VoiceModel voice) {
-                print("Updating selected voice to: ${voice.name}");
-                Provider.of<GenerateDialogViewModel>(context, listen: false)
-                    .updateSelectedVoice(voice);
-              },
-            ),
-          ),
         ],
       ),
     );
