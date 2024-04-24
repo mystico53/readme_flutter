@@ -35,9 +35,61 @@ class IntentViewModel with ChangeNotifier {
   }
 
   // Method to update shared content
-  void updateSharedContent(String newContent) {
-    _sharedContent = newContent;
-    notifyListeners(); // Notify any listeners that the shared content has been updated
+  String lookForURL(String content) {
+    // Debug: Print initial received content
+    print("Initial content received: $content");
+
+    // Check if the content starts with a double quote character
+    if (content.startsWith('"')) {
+      print("Content starts with a double quote, returning original content.");
+      return '';
+    }
+
+    // Extract the URL from the shared content string
+    print("Extracting URL from content...");
+    final regex = RegExp(r'(https?://\S+)');
+    final match = regex.firstMatch(content);
+    if (match != null) {
+      final url = match.group(1);
+      print("URL extracted: $url");
+      // Debug: Print the extracted URL
+      if (isValidUrl(url!)) {
+        print("Valid URL found: $url");
+        // Debug: Print updated content
+        return url;
+      } else {
+        print("Extracted URL is invalid, trimming and re-evaluating...");
+        // Debug: Print invalid URL notice
+        // Try to extract the URL after removing any leading/trailing whitespace
+        final trimmedContent = content.trim();
+        print("Trimmed content: $trimmedContent");
+        // Debug: Print trimmed content
+        final trimmedMatch = regex.firstMatch(trimmedContent);
+        if (trimmedMatch != null) {
+          final trimmedUrl = trimmedMatch.group(1);
+          print("Trimmed URL extracted: $trimmedUrl");
+          // Debug: Print the trimmed URL
+          if (isValidUrl(trimmedUrl!)) {
+            print("Valid trimmed URL found: $trimmedUrl");
+            // Debug: Print updated content
+            return trimmedUrl;
+          } else {
+            print("Trimmed URL is still invalid, returning empty string.");
+            // Debug: Print empty update
+            return '';
+          }
+        } else {
+          print(
+              "No URL could be extracted from trimmed content, returning empty string.");
+          // Debug: Print empty update
+          return '';
+        }
+      }
+    } else {
+      print("No URL found in initial content, returning empty string.");
+      // Debug: Print empty update
+      return '';
+    }
   }
 
   void resetIntent() {

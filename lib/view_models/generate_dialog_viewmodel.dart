@@ -150,9 +150,10 @@ class GenerateDialogViewModel with ChangeNotifier {
             print('Audio URL not found for fileId: $fileId');
           }
         } else {
-          _response = checkResult['error'];
+          _response = 'Google TTS Error: ${checkResult['error']}';
           await FirestoreService().updateFirestoreDocumentStatus(
-              fileId, 'error, generating speech unsuccesful', userId);
+              fileId, 'error: google tts', userId);
+          print('Google TTS error: ${checkResult['error']}');
         }
       }
     } catch (e) {

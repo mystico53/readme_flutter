@@ -63,28 +63,6 @@ class MainScreenState extends State<MainScreen> {
     audioPlayerViewModel.addListener(_progressListener);
   }
 
-/*
-  void checkForSharedFiles() {
-    final intentViewModel =
-        Provider.of<IntentViewModel>(context, listen: false);
-    if (intentViewModel.sharedFiles.isNotEmpty) {
-      if (isDialogOpen) {
-        // Close the current dialog
-        Navigator.pop(context);
-      }
-      // Open the GenerateDialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          isDialogOpen = true;
-          return const GenerateDialog();
-        },
-      ).then((_) {
-        isDialogOpen = false;
-      });
-    }
-  }*/
-
   void _handleIntentViewModelChange() {
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
@@ -93,14 +71,19 @@ class MainScreenState extends State<MainScreen> {
         // Close the current dialog
         Navigator.pop(context);
       }
-      final firstLine = intentViewModel.sharedFiles[0].path;
-      if (intentViewModel.isValidUrl(firstLine)) {
+      final sharedContent = intentViewModel.sharedFiles[0].path;
+      final lines = sharedContent.split('\n');
+      final firstLine = lines.isNotEmpty ? lines[0] : '';
+
+      // Call the intentViewModel to pass the firstLine and get the extracted URL
+      final extractedUrl = intentViewModel.lookForURL(firstLine);
+      if (extractedUrl.isNotEmpty) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ChangeNotifierProvider(
               create: (context) => UserIdViewModel()..initUserId(),
-              child: WebViewPage(url: firstLine),
+              child: WebViewPage(url: extractedUrl),
             ),
           ),
         );
@@ -186,32 +169,31 @@ class MainScreenState extends State<MainScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Color(0xFF4B473D),
+            backgroundColor: const Color(0xFF4B473D),
             title: Row(
               children: [
-                Text(
-                  'Lisme',
-                  style: TextStyle(
-                    fontSize: 32,
-                    height: 1.2,
-                    color: Color(0xFFFFEFC3),
-                  ),
-                ),
-                SizedBox(width: 60),
-                GestureDetector(
-                  onTap: () {
-                    final dynamic tooltip = TooltipState.of(context);
-                    tooltip?.ensureTooltipVisible();
-                  },
-                  child: Tooltip(
-                    message: 'Air time: $formattedDuration',
-                    child: const Icon(
-                      Icons.earbuds_rounded,
-                      size: 24,
+                Tooltip(
+                  message: 'Air time: $formattedDuration',
+                  child: const Text(
+                    'Lisme',
+                    style: TextStyle(
+                      fontSize: 32,
+                      height: 1.2,
                       color: Color(0xFFFFEFC3),
                     ),
                   ),
                 ),
+                const SizedBox(
+                    width:
+                        60), /*
+                Tooltip(
+                  message: 'Air time: $formattedDuration',
+                  child: const Icon(
+                    Icons.earbuds_rounded,
+                    size: 24,
+                    color: Color(0xFFFFEFC3),
+                  ),
+                ),*/
               ],
             ),
             actions: [
@@ -313,7 +295,9 @@ class MainScreenState extends State<MainScreen> {
                                             children: [
                                               Row(
                                                 children: [
-                                                  if (status != 'ready')
+                                                  if (status != 'ready' &&
+                                                      status!
+                                                          .startsWith('error'))
                                                     const Padding(
                                                       padding: EdgeInsets.only(
                                                           right: 8.0),
@@ -327,13 +311,24 @@ class MainScreenState extends State<MainScreen> {
                                                       ),
                                                     ),
                                                   Text(
-                                                    'Status: ${status ?? 'Preparing'}',
+                                                    status ?? 'Preparing',
                                                     style: TextStyle(
                                                       color: status == 'error'
                                                           ? Colors.red
                                                           : null,
                                                     ),
                                                   ),
+                                                  if (status ==
+                                                      'error: google tts')
+                                                    const Padding(
+                                                      padding: EdgeInsets.only(
+                                                          left: 8.0),
+                                                      child: Icon(
+                                                        Icons.error,
+                                                        color: Colors.red,
+                                                        size: 16,
+                                                      ),
+                                                    ),
                                                 ],
                                               ),
                                               Row(

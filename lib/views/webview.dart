@@ -94,6 +94,12 @@ class _WebViewPageState extends State<WebViewPage> {
       appBar: AppBar(
         title: const Text('WebView'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              _controller.reload();
+            },
+          ),
           TextButton(
             onPressed: () {
               final generateDialogViewModel =
