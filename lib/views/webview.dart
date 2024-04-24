@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:readme_app/widgets/voice_selection_widget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:provider/provider.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
@@ -140,6 +141,15 @@ class _WebViewPageState extends State<WebViewPage> {
                 ),
               ),
             ),
+          Expanded(
+            child: VoiceSelectionWidget(
+              onSelectedVoiceChanged: (VoiceModel voice) {
+                print("Updating selected voice to: ${voice.name}");
+                Provider.of<GenerateDialogViewModel>(context, listen: false)
+                    .updateSelectedVoice(voice);
+              },
+            ),
+          ),
         ],
       ),
     );
