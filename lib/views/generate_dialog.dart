@@ -80,13 +80,30 @@ class GenerateDialogState extends State<GenerateDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              const Text(
-                'Create your Lisme',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF4B473D),
-                ),
+              Stack(
+                children: [
+                  const Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Create your Lisme',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4B473D),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      color: const Color(0xFF4B473D),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               Container(

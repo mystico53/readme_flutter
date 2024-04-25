@@ -17,9 +17,25 @@ class IntentViewModel with ChangeNotifier {
   void startListeningForIntents(BuildContext context) {
     _intentSub = _intentService.getSharedFilesStream().listen((files) {
       // Debug message to log the files received
-      print("Received shared files: ${files.length} files");
-      _sharedFiles = files;
-      notifyListeners();
+      print("Intentviewmodel received shared files: ${files.length} files");
+
+      if (files.isNotEmpty) {
+        final sharedFile = files[0];
+        _sharedContent = sharedFile.path;
+        print("Shared content: $_sharedContent");
+
+        if (_sharedContent.startsWith("lismeapp://")) {
+          // Handle oAuth
+          print(
+              "Listened to intent and found a OAuth callback, handling separately.");
+        } else {
+          // Handle regular shared files
+          _sharedFiles = files;
+          notifyListeners();
+        }
+      } else {
+        print("No shared files received.");
+      }
     }, onError: (err) {
       print("Error listening for intents: $err");
     });
@@ -42,6 +58,11 @@ class IntentViewModel with ChangeNotifier {
     // Check if the content starts with a double quote character
     if (content.startsWith('"')) {
       print("Content starts with a double quote, returning original content.");
+      return '';
+    }
+
+    if (content.startsWith("lismeapp://")) {
+      print("lookforURL: ignoring oAuth");
       return '';
     }
 
