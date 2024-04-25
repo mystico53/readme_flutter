@@ -17,6 +17,7 @@ class AppConfig {
   static Uri get generateTitleUrl => baseUrl.resolve('generateTitle');
   static Uri get processRawIntentUrl => baseUrl.resolve('processRawIntent');
   static Uri get submitFeedbackUrl => baseUrl.resolve('submitFeedback');
+  static Uri get exchangeAuthCodeUrl => baseUrl.resolve('exchangeAuthCode');
 
   //static Uri checkTTSUrl(String fileId) => baseUrl.resolve('checkTTS/$fileId');
   static Uri checkTTSUrl(String fileId) {

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
+import 'package:readme_app/utils/app_config.dart';
 import 'package:readme_app/widgets/voice_selection_widget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:provider/provider.dart';
@@ -105,11 +107,25 @@ class _WebViewPageState extends State<WebViewPage> {
     });
   }
 
-  void _handleDeepLink(Uri uri) {
+  void _handleDeepLink(Uri uri) async {
     if (uri.scheme == 'lismeapp' && uri.host == 'oauth2callback') {
       final authorizationCode = uri.queryParameters['code'];
-      // TODO: Use the authorization code to obtain an access token from the server
       print('Authorization Code: $authorizationCode');
+
+      // Send the authorization code to your server
+      final response = await http.post(
+        AppConfig.exchangeAuthCodeUrl,
+        body: {'authorization_code': authorizationCode},
+      );
+
+      if (response.statusCode == 200) {
+        final accessToken = response.body;
+        // TODO: Store the access token securely and use it for authentication
+        print('Access Token: $accessToken');
+      } else {
+        // Handle the error case
+        print('Failed to exchange authorization code for access token');
+      }
     }
   }
 
