@@ -27,6 +27,9 @@ class _WebViewPageState extends State<WebViewPage> {
   double _progress = 0.0;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  bool _isLoading = true;
+
+  final Color customColor = const Color(0xFFFFEFC3);
 
   String _modifyRedirectUrl(String url) {
     final uri = Uri.parse(url);
@@ -136,22 +139,30 @@ class _WebViewPageState extends State<WebViewPage> {
           return "";
         }
       })();
-    ''') as String;
+      ''') as String;
+
+      // Ensure textContent is properly unescaped and formatted
+      String cleanedTextContent = _formatText(textContent);
 
       setState(() {
-        _textContent = textContent;
-        print("now the text should appear in textbox");
+        _textContent = cleanedTextContent;
+        _isLoading = false; // Set loading to false only after text is scraped
       });
 
       print('Text Content:');
-      print(textContent);
+      print(cleanedTextContent);
     } catch (error) {
       print('Error scraping text content: $error');
     }
   }
 
   String _formatText(String text) {
-    String formattedText = text.replaceAll('\\n\\n', '\n\n');
+    // Replace double backslashes with single backslashes
+    String formattedText = text.replaceAll('\\\\n', '\n');
+
+    // Optionally, you can replace other escape sequences as needed
+    formattedText = formattedText.replaceAll('\\\\t', '\t');
+
     return formattedText;
   }
 
@@ -161,62 +172,76 @@ class _WebViewPageState extends State<WebViewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WebView'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              _controller.reload();
-            },
+        backgroundColor: customColor,
+        title: const Text(
+          'Convert to Speech',
+          style: TextStyle(
+            color: Color(0xFF4B473D),
           ),
-          TextButton(
-            onPressed: () {
-              final generateDialogViewModel =
-                  Provider.of<GenerateDialogViewModel>(context, listen: false);
-              generateDialogViewModel.generateAndCheckAudio(
-                _textContent,
-                generateDialogViewModel.currentSelectedVoice,
-                userId,
-              );
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Confirm',
-              style: TextStyle(color: Colors.black),
+        ),
+      ),
+      body: Column(
+        children: [
+          if (_isLoading)
+            LinearProgressIndicator(
+              value: _progress,
+              backgroundColor: customColor,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFF4B473D)),
+            ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(30.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    width: 2,
+                    color: Colors.black,
+                  ),
+                ),
+                child: WebViewWidget(
+                  controller: _controller,
+                ),
+              ),
             ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          VoiceSelectionWidget(
-            onSelectedVoiceChanged: (VoiceModel voice) {
-              print("Updating selected voice to: ${voice.name}");
-              Provider.of<GenerateDialogViewModel>(context, listen: false)
-                  .updateSelectedVoice(voice);
-            },
-          ),
-          if (_progress < 1.0)
-            LinearProgressIndicator(
-              value: _progress,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+      bottomNavigationBar: BottomAppBar(
+        color: customColor,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            VoiceSelectionWidget(
+              onSelectedVoiceChanged: (VoiceModel voice) {
+                print("Updating selected voice to: ${voice.name}");
+                Provider.of<GenerateDialogViewModel>(context, listen: false)
+                    .updateSelectedVoice(voice);
+              },
             ),
-          Expanded(
-            child: WebViewWidget(
-              controller: _controller,
-            ),
-          ),
-          if (_textContent.isNotEmpty)
-            Expanded(
-              child: SingleChildScrollView(
-                child: SelectableText(
-                  _textContent,
-                  style: TextStyle(fontSize: 12),
+            TextButton(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      final generateDialogViewModel =
+                          Provider.of<GenerateDialogViewModel>(context,
+                              listen: false);
+                      generateDialogViewModel.generateAndCheckAudio(
+                        _textContent,
+                        generateDialogViewModel.currentSelectedVoice,
+                        userId,
+                      );
+                      Navigator.pop(context);
+                    },
+              child: Text(
+                _isLoading ? 'Loading...' : 'Create Lisme',
+                style: TextStyle(
+                  color: _isLoading ? Colors.grey : const Color(0xFF4B473D),
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -23,7 +23,7 @@ class MainScreen extends StatefulWidget {
   MainScreenState createState() => MainScreenState();
 }
 
-class MainScreenState extends State<MainScreen> {
+class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   String selectedAudioUrl = '';
   String selectedAudioTitle = '';
   final _scrollController = ScrollController();
@@ -36,6 +36,8 @@ class MainScreenState extends State<MainScreen> {
   late VoidCallback _progressListener;
   Map<String, double> _fileProgress = {};
   IntentViewModel? _intentViewModel; //for webview only
+
+  late AnimationController _animationController;
 
   @override
   void initState() {
@@ -61,6 +63,11 @@ class MainScreenState extends State<MainScreen> {
       }
     };
     audioPlayerViewModel.addListener(_progressListener);
+
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
   }
 
   void _handleIntentViewModelChange() {
@@ -151,6 +158,7 @@ class MainScreenState extends State<MainScreen> {
     intentViewModel.removeListener(_handleIntentViewModelChange);
     _intentViewModel?.removeListener(_handleIntentViewModelChange);
     audioPlayerViewModel.removeListener(_progressListener);
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -398,8 +406,16 @@ class MainScreenState extends State<MainScreen> {
                                                     },
                                                   ),
                                                 )
-                                              : const Icon(
-                                                  Icons.hourglass_empty),
+                                              : RotationTransition(
+                                                  turns: Tween(
+                                                          begin: 0.0, end: 1.0)
+                                                      .animate(
+                                                          _animationController),
+                                                  child: const Icon(
+                                                    Icons.hourglass_empty,
+                                                    color: Color(0xFF4B473D),
+                                                  ),
+                                                ),
                                         ),
                                         if (status != 'ready')
                                           Positioned(

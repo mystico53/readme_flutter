@@ -33,6 +33,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   bool _isAudioLoaded = false;
   String _errorMessage = '';
   DateTime? _startTime;
+  double _playbackSpeed = 1.0; // Playback speed state
 
   @override
   void initState() {
@@ -64,6 +65,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     try {
       await _audioPlayer.setUrl(widget.audioUrl);
       _totalDuration = _audioPlayer.duration ?? Duration.zero;
+      _audioPlayer.setSpeed(_playbackSpeed); // Set initial playback speed
 
       //send viewmodel fileid and duration
       widget.viewModel.startPeriodicUpdate(_totalDuration, widget.fileId);
@@ -152,6 +154,13 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void _jumpToMaxReportedPosition() {
     final maxReportedPosition = widget.viewModel.maxReportedPosition;
     _seekAudio(maxReportedPosition.inMilliseconds.toDouble());
+  }
+
+  void _updatePlaybackSpeed(double speed) {
+    setState(() {
+      _playbackSpeed = speed;
+    });
+    _audioPlayer.setSpeed(speed);
   }
 
   @override
@@ -251,6 +260,28 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Speed control dropdown
+              DropdownButton<double>(
+                value: _playbackSpeed,
+                dropdownColor: Color(0xFF4B473D),
+                style: TextStyle(color: Color(0xFFFFEFC3)),
+                items: List.generate(11, (index) {
+                  double value = 0.7 + (index * 0.1);
+                  return DropdownMenuItem(
+                    value: value,
+                    child: Text(
+                      value.toStringAsFixed(1),
+                      style: TextStyle(color: Color(0xFFFFEFC3)),
+                    ),
+                  );
+                }),
+                onChanged: (value) {
+                  if (value != null) {
+                    _updatePlaybackSpeed(value);
+                  }
+                },
+              ),
+              SizedBox(width: 10),
               GestureDetector(
                 onLongPress: () async {
                   await _audioPlayer.stop();
