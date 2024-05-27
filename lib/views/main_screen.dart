@@ -283,171 +283,195 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                           totalDuration.inMilliseconds)
                                       : 0.0;
 
-                                  return Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 5),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: const Color(0xFF4B473D),
-                                        width: 1.5,
+                                  bool isSelected = selectedFileId == fileId;
+                                  Color tileColor = isSelected
+                                      ? const Color(0xFF4B473D)
+                                      : const Color(0xFFFFEFC3);
+                                  Color textColor = isSelected
+                                      ? const Color(0xFFFFEFC3)
+                                      : const Color(0xFF4B473D);
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      final httpsUrl =
+                                          data?['httpsUrl'] as String?;
+                                      final title = data?['title'] as String?;
+                                      if (httpsUrl != null &&
+                                          httpsUrl.isNotEmpty &&
+                                          title != null) {
+                                        setState(() {
+                                          selectedAudioUrl = httpsUrl;
+                                          selectedAudioTitle = title;
+                                          selectedFileId = fileId;
+                                        });
+                                      } else {
+                                        print(
+                                            'Audio URL or title is missing or invalid for document: $fileId');
+                                      }
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 5),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: const Color(0xFF4B473D),
+                                          width: 1.5,
+                                        ),
+                                        color: tileColor,
                                       ),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                              title ?? 'New Lisme is created'),
-                                          subtitle: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  if (status != 'ready' &&
-                                                      status!
-                                                          .startsWith('error'))
-                                                    const Padding(
-                                                      padding: EdgeInsets.only(
-                                                          right: 8.0),
-                                                      child: SizedBox(
-                                                        width: 16,
-                                                        height: 16,
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                          strokeWidth: 2,
+                                      child: Stack(
+                                        children: [
+                                          ListTile(
+                                            title: Text(
+                                              title ?? 'New Lisme is created',
+                                              style: TextStyle(
+                                                color: textColor,
+                                              ),
+                                            ),
+                                            subtitle: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    if (status != 'ready' &&
+                                                        status!.startsWith(
+                                                            'error'))
+                                                      const Padding(
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                right: 8.0),
+                                                        child: SizedBox(
+                                                          width: 16,
+                                                          height: 16,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                              Color(0xFFFFEFC3),
+                                                            ),
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  Text(
-                                                    status ?? 'Preparing',
-                                                    style: TextStyle(
-                                                      color: status == 'error'
-                                                          ? Colors.red
-                                                          : null,
-                                                    ),
-                                                  ),
-                                                  if (status ==
-                                                      'error: google tts')
-                                                    const Padding(
-                                                      padding: EdgeInsets.only(
-                                                          left: 8.0),
-                                                      child: Icon(
-                                                        Icons.error,
-                                                        color: Colors.red,
-                                                        size: 16,
+                                                    Text(
+                                                      status ?? 'Preparing',
+                                                      style: TextStyle(
+                                                        color: status == 'error'
+                                                            ? Colors.red
+                                                            : textColor,
                                                       ),
                                                     ),
-                                                ],
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Text('$formattedCreatedAt'),
-                                                  const SizedBox(width: 8),
-                                                  IconButton(
-                                                    icon: const Icon(
+                                                    if (status ==
+                                                        'error: google tts')
+                                                      const Padding(
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                left: 8.0),
+                                                        child: Icon(
+                                                          Icons.error,
+                                                          color: Colors.red,
+                                                          size: 16,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      '$formattedCreatedAt',
+                                                      style: TextStyle(
+                                                        color: textColor,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    IconButton(
+                                                      icon: Icon(
                                                         Icons.delete,
-                                                        size: 16),
-                                                    onPressed: () async {
-                                                      print(
-                                                          "Deleting document with ID: $fileId");
-                                                      await FirebaseFirestore
-                                                          .instance
-                                                          .collection(
-                                                              'audioFiles')
-                                                          .doc(fileId)
-                                                          .delete();
-                                                    },
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  if (formattedDuration
-                                                      .isNotEmpty)
-                                                    Text('$formattedDuration'),
-                                                  const SizedBox(width: 8),
-                                                  // Fetch and display saved progress
-                                                ],
-                                              ),
-                                              /*
+                                                        size: 16,
+                                                        color: textColor,
+                                                      ),
+                                                      onPressed: () async {
+                                                        print(
+                                                            "Deleting document with ID: $fileId");
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                'audioFiles')
+                                                            .doc(fileId)
+                                                            .delete();
+                                                      },
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    if (formattedDuration
+                                                        .isNotEmpty)
+                                                      Text(
+                                                        '$formattedDuration',
+                                                        style: TextStyle(
+                                                          color: textColor,
+                                                        ),
+                                                      ),
+                                                    const SizedBox(width: 8),
+                                                    // Fetch and display saved progress
+                                                  ],
+                                                ),
+                                                /*
                                           Text(
                                             'Progress listen: ${progress.toStringAsFixed(1)}%',
                                           ),*/
-                                            ],
+                                              ],
+                                            ),
+                                            trailing: status != 'ready'
+                                                ? RotationTransition(
+                                                    turns: Tween(
+                                                            begin: 0.0,
+                                                            end: 1.0)
+                                                        .animate(
+                                                            _animationController),
+                                                    child: const Icon(
+                                                      Icons.hourglass_empty,
+                                                      color: Color(0xFF4B473D),
+                                                    ),
+                                                  )
+                                                : null,
                                           ),
-                                          trailing: status == 'ready'
-                                              ? CircleAvatar(
-                                                  backgroundColor:
-                                                      const Color(0xFF4B473D),
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                        Icons.play_arrow,
-                                                        color:
-                                                            Color(0xFFFFEFC3)),
-                                                    onPressed: () async {
-                                                      final httpsUrl =
-                                                          data?['httpsUrl']
-                                                              as String?;
-                                                      final title =
-                                                          data?['title']
-                                                              as String?;
-                                                      if (httpsUrl != null &&
-                                                          httpsUrl.isNotEmpty &&
-                                                          title != null) {
-                                                        setState(() {
-                                                          selectedAudioUrl =
-                                                              httpsUrl;
-                                                          selectedAudioTitle =
-                                                              title;
-                                                          selectedFileId =
-                                                              fileId;
-                                                        });
-                                                      } else {
-                                                        print(
-                                                            'Audio URL or title is missing or invalid for document: $fileId');
-                                                      }
-                                                    },
-                                                  ),
-                                                )
-                                              : RotationTransition(
-                                                  turns: Tween(
-                                                          begin: 0.0, end: 1.0)
-                                                      .animate(
-                                                          _animationController),
-                                                  child: const Icon(
-                                                    Icons.hourglass_empty,
-                                                    color: Color(0xFF4B473D),
-                                                  ),
+                                          if (status != 'ready')
+                                            Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: LinearProgressIndicator(
+                                                value: calculateStatus(status),
+                                                backgroundColor:
+                                                    const Color(0xFFFFEFC3),
+                                                valueColor:
+                                                    const AlwaysStoppedAnimation<
+                                                        Color>(
+                                                  Color(0xFF4B473D),
                                                 ),
-                                        ),
-                                        if (status != 'ready')
-                                          Positioned(
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            child: LinearProgressIndicator(
-                                              value: calculateStatus(status),
-                                              backgroundColor:
-                                                  const Color(0xFFFFEFC3),
-                                              valueColor:
-                                                  const AlwaysStoppedAnimation<
-                                                      Color>(Color(0xFF4B473D)),
-                                              minHeight: 8.0,
+                                                minHeight: 8.0,
+                                              ),
                                             ),
-                                          ),
-                                        if (status == 'ready')
-                                          Positioned(
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            child: LinearProgressIndicator(
-                                              value: progress,
-                                              backgroundColor:
-                                                  const Color(0xFFFFEFC3),
-                                              valueColor:
-                                                  const AlwaysStoppedAnimation<
-                                                      Color>(Color(0xFF4B473D)),
-                                              minHeight: 8.0,
+                                          if (status == 'ready')
+                                            Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: LinearProgressIndicator(
+                                                value: progress,
+                                                backgroundColor:
+                                                    const Color(0xFFFFEFC3),
+                                                valueColor:
+                                                    const AlwaysStoppedAnimation<
+                                                        Color>(
+                                                  Color(0xFF4B473D),
+                                                ),
+                                                minHeight: 8.0,
+                                              ),
                                             ),
-                                          ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   );
                                 },
