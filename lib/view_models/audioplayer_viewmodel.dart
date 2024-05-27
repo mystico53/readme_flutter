@@ -8,6 +8,7 @@ class AudioPlayerViewModel extends ChangeNotifier {
   Timer? _periodicTimer;
   Timer? _timePlayedTimer; // Timer for incrementing total time played
   String? _currentFileId;
+  bool _isPlaying = false; // Flag to track if the audio is playing
   String? get currentFileId => _currentFileId;
   double get lastProgressPercentage => _lastProgressPercentage;
   Duration get maxReportedPosition => _maxReportedPosition ?? Duration.zero;
@@ -19,7 +20,6 @@ class AudioPlayerViewModel extends ChangeNotifier {
 
   AudioPlayerViewModel() {
     _loadPrefs();
-    _startTotalTimePlayedTimer(); // Start the timer for incrementing total time played
   }
 
   // Asynchronously load the SharedPreferences instance
@@ -29,11 +29,14 @@ class AudioPlayerViewModel extends ChangeNotifier {
     print("SharedPreferences loaded. Total time played: $_totalTimePlayed");
   }
 
-  void _startTotalTimePlayedTimer() {
+  void startTotalTimePlayedTimer() {
+    _timePlayedTimer?.cancel(); // Cancel any existing timer
     _timePlayedTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      _totalTimePlayed += 1;
-      await _prefs!.setInt('totaltimeplayed', _totalTimePlayed);
-      notifyListeners();
+      if (_isPlaying) {
+        _totalTimePlayed += 1;
+        await _prefs!.setInt('totaltimeplayed', _totalTimePlayed);
+        notifyListeners();
+      }
     });
   }
 
@@ -92,6 +95,16 @@ class AudioPlayerViewModel extends ChangeNotifier {
     if (currentPosition > _maxReportedPosition) {
       _maxReportedPosition = currentPosition;
     }
+  }
+
+  void setPlaying(bool isPlaying) {
+    _isPlaying = isPlaying;
+    if (isPlaying) {
+      startTotalTimePlayedTimer();
+    } else {
+      _timePlayedTimer?.cancel();
+    }
+    notifyListeners();
   }
 
   Future<void> saveProgress(String fileId, Duration position) async {

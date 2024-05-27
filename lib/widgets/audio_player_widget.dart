@@ -87,7 +87,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           _isPlaying = state.playing;
           _isBuffering = state.processingState == ProcessingState.buffering;
         });
-        print("state: ${state.playing}");
+        widget.viewModel.setPlaying(state.playing); // Notify the ViewModel
       });
 
       await _audioPlayer.play();
