@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,7 @@ import 'package:feedback/feedback.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import 'package:readme_app/views/webview.dart';
+import 'package:readme_app/widgets/airtime_widget.dart';
 import '../services/feedback_service.dart';
 import '../view_models/generate_dialog_viewmodel.dart';
 import '../view_models/intent_viewmodel.dart';
@@ -37,6 +37,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Map<String, double> _fileProgress = {};
   IntentViewModel? _intentViewModel; //for webview only
 
+  Timer? _timer; // Define a timer
   late AnimationController _animationController;
 
   @override
@@ -180,28 +181,17 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             backgroundColor: const Color(0xFF4B473D),
             title: Row(
               children: [
-                Tooltip(
-                  message: 'Air time: $formattedDuration',
-                  child: const Text(
-                    'Lisme',
-                    style: TextStyle(
-                      fontSize: 32,
-                      height: 1.2,
-                      color: Color(0xFFFFEFC3),
-                    ),
+                const Text(
+                  'Lisme',
+                  style: TextStyle(
+                    fontSize: 32,
+                    height: 1.2,
+                    color: Color(0xFFFFEFC3),
                   ),
                 ),
                 const SizedBox(
-                    width:
-                        60), /*
-                Tooltip(
-                  message: 'Air time: $formattedDuration',
-                  child: const Icon(
-                    Icons.earbuds_rounded,
-                    size: 24,
-                    color: Color(0xFFFFEFC3),
-                  ),
-                ),*/
+                    width: 10), // Space between the title and airtime
+                const AirtimeWidget(), // Use the AirtimeWidget here
               ],
             ),
             actions: [
@@ -229,15 +219,57 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             final documents = snapshot.data!.docs;
+                            // Inside the StreamBuilder's builder method
                             if (documents.isEmpty) {
-                              return ListTile(
-                                title: const Text(
-                                    'Learn how to create your first lisme'),
-                                trailing: const Icon(Icons.tips_and_updates),
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                      context, '/intropages/intropage_main');
-                                },
+                              return Center(
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.9, // Set the width to 90% of the screen width
+                                  height:
+                                      250, // Make the list tile 5 rows high (assuming each row is about 50px)
+                                  margin: const EdgeInsets.symmetric(
+                                      vertical: 20), // Ensure vertical padding
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: const Color(0xFF4B473D),
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                        5.0), // Add border radius to make it look like a tile
+                                  ),
+                                  child: ListTile(
+                                    title: const Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            'Listen with Lisme',
+                                            style: TextStyle(
+                                              color: Color(0xFF4B473D),
+                                              fontSize:
+                                                  24, // Larger font size for "Hi!"
+                                              fontWeight: FontWeight
+                                                  .bold, // Bold text for "Hi!"
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          SizedBox(
+                                              height:
+                                                  8), // Space between the two lines of text
+                                          Text(
+                                            'Please share a website with this app',
+                                            style: TextStyle(
+                                              color: Color(0xFF4B473D),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    onTap: () {},
+                                  ),
+                                ),
                               );
                             }
 

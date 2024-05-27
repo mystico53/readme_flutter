@@ -54,6 +54,12 @@ class GenerateDialogState extends State<GenerateDialog> {
     } else {
       print("No shared files are available.");
     }
+
+    // Ensure toggles are on by default
+    Provider.of<GenerateDialogViewModel>(context, listen: false)
+        .toggleCleanAI(true);
+    Provider.of<GenerateDialogViewModel>(context, listen: false)
+        .toggleCleanText(true);
   }
 
   @override
@@ -149,29 +155,17 @@ class GenerateDialogState extends State<GenerateDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        const Text(
-                          "Select Voice:",
-                          style: TextStyle(
-                            color: Color(0xFF4B473D),
-                          ),
-                        ),
-                        const Spacer(),
-                        Expanded(
-                          child: VoiceSelectionWidget(
-                            onSelectedVoiceChanged: (VoiceModel voice) {
-                              print(
-                                  "Updating selected voice to: ${voice.name}");
-                              Provider.of<GenerateDialogViewModel>(context,
-                                      listen: false)
-                                  .updateSelectedVoice(voice);
-                            },
-                          ),
-                        ),
-                      ],
+                    // Expanded Voice Selection Widget
+                    VoiceSelectionWidget(
+                      onSelectedVoiceChanged: (VoiceModel voice) {
+                        print("Updating selected voice to: ${voice.name}");
+                        Provider.of<GenerateDialogViewModel>(context,
+                                listen: false)
+                            .updateSelectedVoice(voice);
+                      },
                     ),
                     const SizedBox(height: 16.0),
+                    /*
                     Row(
                       children: [
                         const Text(
@@ -221,6 +215,7 @@ class GenerateDialogState extends State<GenerateDialog> {
                         ),
                       ],
                     ),
+                    */
                   ],
                 ),
               ),

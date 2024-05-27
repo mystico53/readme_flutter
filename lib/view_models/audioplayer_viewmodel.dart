@@ -6,6 +6,7 @@ class AudioPlayerViewModel extends ChangeNotifier {
   late Duration _maxReportedPosition = Duration.zero;
   double _lastProgressPercentage = 0.0;
   Timer? _periodicTimer;
+  Timer? _timePlayedTimer; // Timer for incrementing total time played
   String? _currentFileId;
   String? get currentFileId => _currentFileId;
   double get lastProgressPercentage => _lastProgressPercentage;
@@ -18,6 +19,7 @@ class AudioPlayerViewModel extends ChangeNotifier {
 
   AudioPlayerViewModel() {
     _loadPrefs();
+    _startTotalTimePlayedTimer(); // Start the timer for incrementing total time played
   }
 
   // Asynchronously load the SharedPreferences instance
@@ -25,6 +27,14 @@ class AudioPlayerViewModel extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     _totalTimePlayed = _prefs!.getInt('totaltimeplayed') ?? 0;
     print("SharedPreferences loaded. Total time played: $_totalTimePlayed");
+  }
+
+  void _startTotalTimePlayedTimer() {
+    _timePlayedTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      _totalTimePlayed += 1;
+      await _prefs!.setInt('totaltimeplayed', _totalTimePlayed);
+      notifyListeners();
+    });
   }
 
   Future<void> updateTotalTimePlayed(int seconds) async {
@@ -103,6 +113,8 @@ class AudioPlayerViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _periodicTimer?.cancel();
+    _timePlayedTimer
+        ?.cancel(); // Cancel the timer when the ViewModel is disposed
     print("Disposing AudioPlayerViewModel and canceling timer.");
     super.dispose();
   }
