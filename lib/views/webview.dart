@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:http/http.dart' as http;
-
 import 'package:flutter/material.dart';
 import 'package:readme_app/utils/app_config.dart';
 import 'package:readme_app/widgets/voice_selection_widget.dart';
@@ -29,21 +28,39 @@ class _WebViewPageState extends State<WebViewPage> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
-  String _buildGoogleLoginUrl() {
-    const String clientId =
-        '699002329011-4uc0putjghn8rd05cvck6lh92l4jl8eq.apps.googleusercontent.com';
-    const String redirectUri =
-        'https://fir-readme-123.firebaseapp.com/oauth-callback.html';
-    const String scope = 'email profile'; // Add any additional scopes you need
-    const String responseType = 'code';
+  String _modifyRedirectUrl(String url) {
+    final uri = Uri.parse(url);
+    final redirectUri = uri.queryParameters['redirect_uri'];
 
-    final String url = 'https://accounts.google.com/o/oauth2/auth?'
-        'client_id=$clientId&'
-        'redirect_uri=$redirectUri&'
-        'scope=$scope&'
-        'response_type=$responseType';
+    if (redirectUri != null) {
+      final modifiedRedirectUri = Uri.encodeFull(
+        'lismeapp://myaccount.nytimes.com/auth/google-login-callback',
+      );
+      final modifiedUri = uri.replace(
+        queryParameters: {
+          ...uri.queryParameters,
+          'redirect_uri': modifiedRedirectUri,
+        },
+      );
+      return modifiedUri.toString();
+    }
 
     return url;
+  }
+
+  Future<void> initAppLinks() async {
+    _appLinks = AppLinks();
+
+    // Listen for incoming URLs
+    _linkSubscription = _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        // Extract the original redirect URL from the custom URL scheme
+        final redirectUrl =
+            uri.toString().replaceFirst('lismeapp://', 'https://');
+        // Load the redirect URL in the WebView
+        _controller.loadRequest(Uri.parse(redirectUrl));
+      }
+    });
   }
 
   @override
@@ -53,25 +70,17 @@ class _WebViewPageState extends State<WebViewPage> {
     _generateDialogViewModel = GenerateDialogViewModel(userId);
 
     _controller = WebViewController()
-      ..clearCache()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse(widget.url))
+      ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
           onWebResourceError: (WebResourceError error) {
             // Handle SSL errors and other web resource errors
           },
-          onNavigationRequest: (NavigationRequest request) {
-            //handle oauth logins
-            if (request.url
-                .startsWith("https://accounts.google.com/o/oauth2/auth")) {
-              final googleLoginUrl = _buildGoogleLoginUrl();
-              _launchInBrowser(googleLoginUrl); // Open in external browser
-              return NavigationDecision.prevent; // Prevent loading in WebView
-            }
-
-            // Handle mixed content and other navigation requests
-            return NavigationDecision.navigate;
+          onNavigationRequest: (NavigationRequest request) async {
+            final modifiedUrl = _modifyRedirectUrl(request.url);
+            await _launchInBrowser(modifiedUrl);
+            return NavigationDecision.prevent;
           },
           onPageFinished: (String url) {
             _scrapeTextContent();
@@ -83,50 +92,9 @@ class _WebViewPageState extends State<WebViewPage> {
           },
         ),
       )
-      ..setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36',
-      );
+      ..loadRequest(Uri.parse(widget.url));
 
-    initDeepLinks();
-  }
-
-  Future<void> initDeepLinks() async {
-    _appLinks = AppLinks();
-
-    // Check initial link if app was in cold state (terminated)
-    final appLink = await _appLinks.getInitialAppLink();
-    if (appLink != null) {
-      print('getInitialAppLink: $appLink');
-      _handleDeepLink(appLink);
-    }
-
-    // Handle link when app is in warm state (front or background)
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      print('onAppLink: $uri');
-      _handleDeepLink(uri);
-    });
-  }
-
-  void _handleDeepLink(Uri uri) async {
-    if (uri.scheme == 'lismeapp' && uri.host == 'oauth2callback') {
-      final authorizationCode = uri.queryParameters['code'];
-      print('Authorization Code: $authorizationCode');
-
-      // Send the authorization code to your server
-      final response = await http.post(
-        AppConfig.exchangeAuthCodeUrl,
-        body: {'authorization_code': authorizationCode},
-      );
-
-      if (response.statusCode == 200) {
-        final accessToken = response.body;
-        // TODO: Store the access token securely and use it for authentication
-        print('Access Token: $accessToken');
-      } else {
-        // Handle the error case
-        print('Failed to exchange authorization code for access token');
-      }
-    }
+    initAppLinks();
   }
 
   @override
@@ -136,25 +104,22 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   Future<void> _launchInBrowser(String urlString) async {
-    print("Launching URL: $urlString"); // Debug: Log the URL being launched
+    print("Launching URL: $urlString");
     final Uri url = Uri.parse(urlString);
     final LaunchMode mode = LaunchMode.externalApplication;
 
-    print(
-        "Checking if the URL can be launched..."); // Debug: Check URL launch capability
+    print("Checking if the URL can be launched...");
     final bool webViewSupported = await canLaunchUrl(url);
 
     if (webViewSupported) {
-      print(
-          "URL can be launched, proceeding with launchUrl..."); // Debug: Confirm URL is supported
+      print("URL can be launched, proceeding with launchUrl...");
       await launchUrl(
         url,
         mode: mode,
       );
-      print(
-          "URL launched successfully."); // Debug: Confirm URL has been launched
+      print("URL launched successfully.");
     } else {
-      print("Failed to launch URL: $urlString"); // Debug: Log failure
+      print("Failed to launch URL: $urlString");
       throw 'Could not launch $urlString';
     }
   }
@@ -174,7 +139,6 @@ class _WebViewPageState extends State<WebViewPage> {
     ''') as String;
 
       setState(() {
-        //_textContent = _formatText(textContent); replace /n/n with linebreaks
         _textContent = textContent;
         print("now the text should appear in textbox");
       });
