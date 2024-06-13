@@ -57,7 +57,7 @@ class GenerateDialogState extends State<GenerateDialog> {
 
     // Ensure toggles are on by default
     Provider.of<GenerateDialogViewModel>(context, listen: false)
-        .toggleCleanAI(true);
+        .toggleCleanAI(false);
     Provider.of<GenerateDialogViewModel>(context, listen: false)
         .toggleCleanText(true);
   }
@@ -165,6 +165,7 @@ class GenerateDialogState extends State<GenerateDialog> {
                       },
                     ),
                     const SizedBox(height: 16.0),
+
                     /*
                     Row(
                       children: [
@@ -214,8 +215,7 @@ class GenerateDialogState extends State<GenerateDialog> {
                           ),
                         ),
                       ],
-                    ),
-                    */
+                    ),*/
                   ],
                 ),
               ),
