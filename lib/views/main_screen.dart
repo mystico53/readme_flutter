@@ -411,20 +411,8 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                 ),
                                                 Row(
                                                   children: [
-                                                    Text(
-                                                      '$formattedCreatedAt',
-                                                      style: TextStyle(
-                                                        color: textColor,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    IconButton(
-                                                      icon: Icon(
-                                                        Icons.delete,
-                                                        size: 16,
-                                                        color: textColor,
-                                                      ),
-                                                      onPressed: () async {
+                                                    GestureDetector(
+                                                      onLongPress: () async {
                                                         print(
                                                             "Deleting document with ID: $fileId");
                                                         await FirebaseFirestore
@@ -434,7 +422,21 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                             .doc(fileId)
                                                             .delete();
                                                       },
+                                                      child: Icon(
+                                                        Icons.delete,
+                                                        size: 16,
+                                                        color: textColor,
+                                                      ),
                                                     ),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      '$formattedCreatedAt',
+                                                      style: TextStyle(
+                                                        color: textColor,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+
                                                     const SizedBox(width: 8),
                                                     if (formattedDuration
                                                         .isNotEmpty)
