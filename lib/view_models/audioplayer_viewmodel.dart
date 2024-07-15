@@ -91,6 +91,20 @@ class AudioPlayerViewModel extends ChangeNotifier {
     return null;
   }
 
+  Future<Duration?> getStoredPosition(String fileId) async {
+    if (_prefs == null) {
+      print("SharedPreferences not initialized, cannot load saved progress.");
+      return null;
+    }
+
+    String? savedProgressString = _prefs!.getString('$fileId');
+    if (savedProgressString != null) {
+      int savedMilliseconds = int.parse(savedProgressString);
+      return Duration(milliseconds: savedMilliseconds);
+    }
+    return null;
+  }
+
   void updatePosition(Duration currentPosition) {
     if (currentPosition > _maxReportedPosition) {
       _maxReportedPosition = currentPosition;

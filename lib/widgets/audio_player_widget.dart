@@ -67,6 +67,14 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       _totalDuration = _audioPlayer.duration ?? Duration.zero;
       _audioPlayer.setSpeed(_playbackSpeed); // Set initial playback speed
 
+      // Retrieve the stored position for this audio URL
+      Duration? storedPosition =
+          await widget.viewModel.getStoredPosition(widget.fileId);
+      if (storedPosition != null) {
+        await _audioPlayer.seek(storedPosition);
+        _currentPosition = storedPosition;
+      }
+
       //send viewmodel fileid and duration
       widget.viewModel.startPeriodicUpdate(_totalDuration, widget.fileId);
 

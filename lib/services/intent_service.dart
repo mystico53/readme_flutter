@@ -1,21 +1,31 @@
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'dart:async';
 
 class IntentService {
+  StreamSubscription? _intentSub;
+
   Future<List<SharedMediaFile>> getInitialSharedFiles() async {
-    try {
-      final files = await ReceiveSharingIntent.getInitialMedia();
-      return files;
-    } catch (e) {
-      print("Error getting initial shared files: $e");
-      return [];
-    }
+    // Updated method to get initial media
+    final files = await ReceiveSharingIntent.instance.getInitialMedia();
+    return files;
   }
 
   Stream<List<SharedMediaFile>> getSharedFilesStream() {
-    return ReceiveSharingIntent.getMediaStream();
+    // Updated method to get media stream
+    return ReceiveSharingIntent.instance.getMediaStream();
   }
 
   void resetIntent() {
-    ReceiveSharingIntent.reset();
+    // No need to reset in the new version, as the library handles it internally
+  }
+
+  void startListening() {
+    _intentSub = getSharedFilesStream().listen((List<SharedMediaFile> files) {
+      // Handle received files
+    });
+  }
+
+  void dispose() {
+    _intentSub?.cancel();
   }
 }

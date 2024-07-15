@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-
 import '../services/intent_service.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -17,7 +16,7 @@ class IntentViewModel with ChangeNotifier {
   void startListeningForIntents(BuildContext context) {
     _intentSub = _intentService.getSharedFilesStream().listen((files) {
       // Debug message to log the files received
-      print("Intentviewmodel received shared files: ${files.length} files");
+      print("IntentViewModel received shared files: ${files.length} files");
 
       if (files.isNotEmpty) {
         final sharedFile = files[0];
@@ -25,9 +24,9 @@ class IntentViewModel with ChangeNotifier {
         print("Shared content: $_sharedContent");
 
         if (_sharedContent.startsWith("lismeapp://")) {
-          // Handle oAuth
+          // Handle OAuth
           print(
-              "Listened to intent and found a OAuth callback, handling separately.");
+              "Listened to intent and found an OAuth callback, handling separately.");
         } else {
           // Handle regular shared files
           _sharedFiles = files;
@@ -43,10 +42,8 @@ class IntentViewModel with ChangeNotifier {
 
   Future<void> loadInitialSharedFiles() async {
     _sharedFiles = await _intentService.getInitialSharedFiles();
-
     // Debug message after loading the files to indicate success and how many files were loaded
     print("Loaded initial shared files: ${_sharedFiles.length} files");
-
     notifyListeners();
   }
 
@@ -62,7 +59,7 @@ class IntentViewModel with ChangeNotifier {
     }
 
     if (content.startsWith("lismeapp://")) {
-      print("lookforURL: ignoring oAuth");
+      print("lookForURL: ignoring OAuth");
       return '';
     }
 
