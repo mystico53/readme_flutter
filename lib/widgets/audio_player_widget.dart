@@ -146,14 +146,14 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   void _jumpBackward() {
-    final newPosition = _currentPosition - Duration(seconds: 10);
+    final newPosition = _currentPosition - const Duration(seconds: 10);
     _seekAudio(newPosition < Duration.zero
         ? 0
         : newPosition.inMilliseconds.toDouble());
   }
 
   void _jumpForward() {
-    final newPosition = _currentPosition + Duration(seconds: 10);
+    final newPosition = _currentPosition + const Duration(seconds: 10);
     _seekAudio(newPosition > _totalDuration
         ? _totalDuration.inMilliseconds.toDouble()
         : newPosition.inMilliseconds.toDouble());
@@ -188,24 +188,24 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         : 0.0;
 
     return Container(
-      color: Color(0xFF4B473D),
-      padding: EdgeInsets.all(16.0),
+      color: const Color(0xFF4B473D),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_isAudioLoaded)
             Text(
               _errorMessage,
-              style: TextStyle(color: Color(0xFFFFEFC3)),
+              style: const TextStyle(color: Color(0xFFFFEFC3)),
             )
           else
-            SizedBox.shrink(),
-          SizedBox(height: 10),
+            const SizedBox.shrink(),
+          const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (_isBuffering && _isAudioLoaded)
-                SizedBox(
+                const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -215,12 +215,12 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   ),
                 )
               else
-                SizedBox(width: 16),
-              SizedBox(width: 8),
+                const SizedBox(width: 16),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   widget.audioTitle,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Color(0xFFFFEFC3),
@@ -230,7 +230,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _isAudioLoaded
               ? Row(
                   children: [
@@ -238,48 +238,73 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                       width: 80,
                       child: Text(
                         currentPositionString,
-                        style: TextStyle(color: Color(0xFFFFEFC3)),
+                        style: const TextStyle(color: Color(0xFFFFEFC3)),
                       ),
                     ),
                     Expanded(
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 4,
-                          thumbColor: Color(0xFFFFEFC3),
-                          activeTrackColor: Color(0xFFFFEFC3),
-                          inactiveTrackColor: Colors.transparent,
-                        ),
-                        child: Slider(
-                          value: currentPositionValue,
-                          min: 0.0,
-                          max: totalDurationValue,
-                          onChanged: _seekAudio,
-                        ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 2,
+                              thumbColor: Colors.transparent,
+                              activeTrackColor: const Color(0xFFFFEFC3),
+                              inactiveTrackColor: Colors.transparent,
+                              overlayColor: Colors.transparent,
+                            ),
+                            child: Slider(
+                              value: widget
+                                  .viewModel.maxReportedPosition.inMilliseconds
+                                  .toDouble()
+                                  .clamp(0.0, totalDurationValue),
+                              min: 0.0,
+                              max: totalDurationValue,
+                              onChanged:
+                                  null, // Make this slider non-interactive
+                            ),
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 4,
+                              thumbColor: const Color(0xFFFFEFC3),
+                              activeTrackColor: const Color(0xFFFFEFC3),
+                              inactiveTrackColor: Colors.transparent,
+                            ),
+                            child: Slider(
+                              value: currentPositionValue.clamp(
+                                  0.0, totalDurationValue),
+                              min: 0.0,
+                              max: totalDurationValue,
+                              onChanged: _seekAudio,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Text(
                       totalDurationString,
-                      style: TextStyle(color: Color(0xFFFFEFC3)),
+                      style: const TextStyle(color: Color(0xFFFFEFC3)),
                     ),
                   ],
                 )
               : Container(),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Speed control dropdown
               DropdownButton<double>(
                 value: _playbackSpeed,
-                dropdownColor: Color(0xFF4B473D),
-                style: TextStyle(color: Color(0xFFFFEFC3)),
+                dropdownColor: const Color(0xFF4B473D),
+                style: const TextStyle(color: Color(0xFFFFEFC3)),
                 items: List.generate(11, (index) {
                   double value = 0.7 + (index * 0.1);
                   return DropdownMenuItem(
                     value: value,
                     child: Text(
                       value.toStringAsFixed(1),
-                      style: TextStyle(color: Color(0xFFFFEFC3)),
+                      style: const TextStyle(color: Color(0xFFFFEFC3)),
                     ),
                   );
                 }),
@@ -289,7 +314,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   }
                 },
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               GestureDetector(
                 onLongPress: () async {
                   await _audioPlayer.stop();
@@ -307,15 +332,15 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                       _currentPosition = Duration.zero;
                     });
                   },
-                  icon: Icon(Icons.stop, color: Color(0xFFFFEFC3)),
+                  icon: const Icon(Icons.stop, color: Color(0xFFFFEFC3)),
                 ),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               IconButton(
                 onPressed: _jumpBackward,
-                icon: Icon(Icons.replay_10, color: Color(0xFFFFEFC3)),
+                icon: const Icon(Icons.replay_10, color: Color(0xFFFFEFC3)),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               GestureDetector(
                 onLongPress: () async {
                   await _audioPlayer.seek(_currentPosition);
@@ -340,21 +365,21 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   },
                   icon: Icon(
                     _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Color(0xFFFFEFC3),
+                    color: const Color(0xFFFFEFC3),
                   ),
                 ),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               IconButton(
                 onPressed: _jumpForward,
-                icon: Icon(Icons.forward_10, color: Color(0xFFFFEFC3)),
+                icon: const Icon(Icons.forward_10, color: Color(0xFFFFEFC3)),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               IconButton(
                 onPressed: _jumpToMaxReportedPosition,
-                icon: Icon(Icons.skip_next, color: Color(0xFFFFEFC3)),
+                icon: const Icon(Icons.skip_next, color: Color(0xFFFFEFC3)),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
             ],
           ),
         ],
