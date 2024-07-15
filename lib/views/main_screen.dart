@@ -179,9 +179,9 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF4B473D),
-            title: Row(
+            title: const Row(
               children: [
-                const Text(
+                Text(
                   'Lisme',
                   style: TextStyle(
                     fontSize: 32,
@@ -189,9 +189,8 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     color: Color(0xFFFFEFC3),
                   ),
                 ),
-                const SizedBox(
-                    width: 10), // Space between the title and airtime
-                const AirtimeWidget(), // Use the AirtimeWidget here
+                SizedBox(width: 10), // Space between the title and airtime
+                AirtimeWidget(), // Use the AirtimeWidget here
               ],
             ),
             actions: [
@@ -364,51 +363,57 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Row(
-                                                  children: [
-                                                    if (status != 'ready' &&
-                                                        status!.startsWith(
-                                                            'error'))
-                                                      const Padding(
-                                                        padding:
-                                                            EdgeInsets.only(
-                                                                right: 8.0),
-                                                        child: SizedBox(
-                                                          width: 16,
-                                                          height: 16,
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                            valueColor:
-                                                                AlwaysStoppedAnimation<
-                                                                    Color>(
-                                                              Color(0xFFFFEFC3),
+                                                if (status !=
+                                                    'ready') // Add this condition
+                                                  Row(
+                                                    children: [
+                                                      if (status!
+                                                          .startsWith('error'))
+                                                        const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: 8.0),
+                                                          child: SizedBox(
+                                                            width: 16,
+                                                            height: 16,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                              valueColor:
+                                                                  AlwaysStoppedAnimation<
+                                                                      Color>(
+                                                                Color(
+                                                                    0xFFFFEFC3),
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
-                                                      ),
-                                                    Text(
-                                                      status ?? 'Preparing',
-                                                      style: TextStyle(
-                                                        color: status == 'error'
-                                                            ? Colors.red
-                                                            : textColor,
-                                                      ),
-                                                    ),
-                                                    if (status ==
-                                                        'error: google tts')
-                                                      const Padding(
-                                                        padding:
-                                                            EdgeInsets.only(
-                                                                left: 8.0),
-                                                        child: Icon(
-                                                          Icons.error,
-                                                          color: Colors.red,
-                                                          size: 16,
+                                                      Text(
+                                                        status ?? 'Preparing',
+                                                        style: TextStyle(
+                                                          color:
+                                                              status == 'error'
+                                                                  ? Colors.red
+                                                                  : textColor,
                                                         ),
                                                       ),
-                                                  ],
-                                                ),
+                                                      if (status ==
+                                                          'error: google tts')
+                                                        const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  left: 8.0),
+                                                          child: Icon(
+                                                            Icons.error,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                if (status !=
+                                                    'ready') // Add this condition
+                                                  const SizedBox(height: 8),
                                                 Row(
                                                   children: [
                                                     GestureDetector(
@@ -436,8 +441,6 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                       ),
                                                     ),
                                                     const SizedBox(width: 8),
-
-                                                    const SizedBox(width: 8),
                                                     if (formattedDuration
                                                         .isNotEmpty)
                                                       Text(
@@ -447,13 +450,9 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                         ),
                                                       ),
                                                     const SizedBox(width: 8),
-                                                    // Fetch and display saved progress
                                                   ],
                                                 ),
-                                                /*
-                                          Text(
-                                            'Progress listen: ${progress.toStringAsFixed(1)}%',
-                                          ),*/
+                                                const SizedBox(height: 8),
                                               ],
                                             ),
                                             trailing: status != 'ready'
@@ -475,16 +474,27 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               bottom: 0,
                                               left: 0,
                                               right: 0,
-                                              child: LinearProgressIndicator(
-                                                value: calculateStatus(status),
-                                                backgroundColor:
-                                                    const Color(0xFFFFEFC3),
-                                                valueColor:
-                                                    const AlwaysStoppedAnimation<
-                                                        Color>(
-                                                  Color(0xFF4B473D),
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  border: Border(
+                                                    top: BorderSide(
+                                                        color:
+                                                            Color(0xFFFFEFC3),
+                                                        width: 1),
+                                                  ),
                                                 ),
-                                                minHeight: 8.0,
+                                                child: LinearProgressIndicator(
+                                                  value:
+                                                      calculateStatus(status),
+                                                  backgroundColor:
+                                                      const Color(0xFFFFEFC3),
+                                                  valueColor:
+                                                      const AlwaysStoppedAnimation<
+                                                          Color>(
+                                                    Color(0xFF4B473D),
+                                                  ),
+                                                  minHeight: 8.0,
+                                                ),
                                               ),
                                             ),
                                           if (status == 'ready')
@@ -492,16 +502,26 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               bottom: 0,
                                               left: 0,
                                               right: 0,
-                                              child: LinearProgressIndicator(
-                                                value: progress,
-                                                backgroundColor:
-                                                    const Color(0xFFFFEFC3),
-                                                valueColor:
-                                                    const AlwaysStoppedAnimation<
-                                                        Color>(
-                                                  Color(0xFF4B473D),
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  border: Border(
+                                                    top: BorderSide(
+                                                        color:
+                                                            Color(0xFFFFEFC3),
+                                                        width: 1),
+                                                  ),
                                                 ),
-                                                minHeight: 8.0,
+                                                child: LinearProgressIndicator(
+                                                  value: progress,
+                                                  backgroundColor:
+                                                      const Color(0xFFFFEFC3),
+                                                  valueColor:
+                                                      const AlwaysStoppedAnimation<
+                                                          Color>(
+                                                    Color(0xFF4B473D),
+                                                  ),
+                                                  minHeight: 8.0,
+                                                ),
                                               ),
                                             ),
                                         ],
