@@ -63,7 +63,7 @@ android {
     defaultConfig {
         applicationId "com.mystical.lisme"
         minSdkVersion 21
-        targetSdkVersion flutter.targetSdkVersion.toInteger()
+        targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }

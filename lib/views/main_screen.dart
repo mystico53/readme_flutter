@@ -411,6 +411,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                         ),
                                                     ],
                                                   ),
+                                                const SizedBox(height: 16),
                                                 if (status !=
                                                     'ready') // Add this condition
                                                   const SizedBox(height: 8),
@@ -433,14 +434,14 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                         color: textColor,
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 8),
+                                                    const SizedBox(width: 16),
                                                     Text(
                                                       '$formattedCreatedAt',
                                                       style: TextStyle(
                                                         color: textColor,
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 8),
+                                                    const SizedBox(width: 40),
                                                     if (formattedDuration
                                                         .isNotEmpty)
                                                       Text(
@@ -452,7 +453,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     const SizedBox(width: 8),
                                                   ],
                                                 ),
-                                                const SizedBox(height: 8),
+                                                const SizedBox(height: 16),
                                               ],
                                             ),
                                             trailing: status != 'ready'
