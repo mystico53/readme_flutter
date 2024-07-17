@@ -418,15 +418,108 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                 Row(
                                                   children: [
                                                     GestureDetector(
-                                                      onLongPress: () async {
-                                                        print(
-                                                            "Deleting document with ID: $fileId");
-                                                        await FirebaseFirestore
-                                                            .instance
-                                                            .collection(
-                                                                'audioFiles')
-                                                            .doc(fileId)
-                                                            .delete();
+                                                      onTap: () {
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (BuildContext
+                                                              context) {
+                                                            return Dialog(
+                                                              backgroundColor:
+                                                                  Colors
+                                                                      .transparent,
+                                                              elevation: 0,
+                                                              child: Container(
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: const Color(
+                                                                      0xFFFFEFC3),
+                                                                  border: Border
+                                                                      .all(
+                                                                    color: const Color(
+                                                                        0xFF4B473D),
+                                                                    width: 2,
+                                                                  ),
+                                                                ),
+                                                                child: Column(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: <Widget>[
+                                                                    Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .all(
+                                                                          16.0),
+                                                                      child:
+                                                                          Text(
+                                                                        'Confirm Deletion',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          color:
+                                                                              const Color(0xFF4B473D),
+                                                                          fontWeight:
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              18,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .symmetric(
+                                                                          horizontal:
+                                                                              16.0),
+                                                                      child:
+                                                                          Text(
+                                                                        'Are you sure you want to delete "$title"?',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          color:
+                                                                              const Color(0xFF4B473D),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    SizedBox(
+                                                                        height:
+                                                                            16),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .end,
+                                                                      children: <Widget>[
+                                                                        TextButton(
+                                                                          child:
+                                                                              Text(
+                                                                            'No',
+                                                                            style:
+                                                                                TextStyle(color: const Color(0xFF4B473D)),
+                                                                          ),
+                                                                          onPressed:
+                                                                              () {
+                                                                            Navigator.of(context).pop();
+                                                                          },
+                                                                        ),
+                                                                        TextButton(
+                                                                          child:
+                                                                              Text(
+                                                                            'Yes',
+                                                                            style:
+                                                                                TextStyle(color: const Color(0xFF4B473D)),
+                                                                          ),
+                                                                          onPressed:
+                                                                              () async {
+                                                                            Navigator.of(context).pop();
+                                                                            print("Deleting document with ID: $fileId");
+                                                                            await FirebaseFirestore.instance.collection('audioFiles').doc(fileId).delete();
+                                                                          },
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            );
+                                                          },
+                                                        );
                                                       },
                                                       child: Icon(
                                                         Icons.delete,
