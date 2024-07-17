@@ -54,13 +54,10 @@ class _WebViewPageState extends State<WebViewPage> {
   Future<void> initAppLinks() async {
     _appLinks = AppLinks();
 
-    // Listen for incoming URLs
     _linkSubscription = _appLinks.uriLinkStream.listen((Uri? uri) {
       if (uri != null) {
-        // Extract the original redirect URL from the custom URL scheme
         final redirectUrl =
             uri.toString().replaceFirst('lismeapp://', 'https://');
-        // Load the redirect URL in the WebView
         _controller.loadRequest(Uri.parse(redirectUrl));
       }
     });
@@ -72,21 +69,37 @@ class _WebViewPageState extends State<WebViewPage> {
     final userId = Provider.of<UserIdViewModel>(context, listen: false).userId;
     _generateDialogViewModel = GenerateDialogViewModel(userId);
 
+    _initializeWebView();
+    initAppLinks();
+  }
+
+  void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
           onWebResourceError: (WebResourceError error) {
-            // Handle SSL errors and other web resource errors
+            print("Web Resource Error: ${error.description}");
           },
           onNavigationRequest: (NavigationRequest request) async {
             final modifiedUrl = _modifyRedirectUrl(request.url);
+            if (modifiedUrl.contains('focus.de') ||
+                _shouldHandleInWebView(modifiedUrl)) {
+              _handleUrlInWebView(modifiedUrl);
+              return NavigationDecision.prevent;
+            }
             await _launchInBrowser(modifiedUrl);
             return NavigationDecision.prevent;
           },
+          onPageStarted: (String url) {
+            setState(() {
+              _isLoading = true;
+            });
+          },
           onPageFinished: (String url) {
             _scrapeTextContent();
+            _injectAntiAntiFramingScript();
           },
           onProgress: (int progress) {
             setState(() {
@@ -95,9 +108,69 @@ class _WebViewPageState extends State<WebViewPage> {
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..addJavaScriptChannel(
+        'Flutter',
+        onMessageReceived: (JavaScriptMessage message) {
+          print('JavaScript message: ${message.message}');
+        },
+      );
 
-    initAppLinks();
+    _loadUrl(widget.url);
+  }
+
+  bool _shouldHandleInWebView(String url) {
+    // Add logic here to determine if the URL should be handled in WebView
+    return false; // Default to false, change as needed
+  }
+
+  Future<void> _loadUrl(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final content = response.body;
+        await _controller.loadHtmlString(content, baseUrl: url);
+      } else {
+        print('Failed to load URL: ${response.statusCode}');
+        await _controller.loadRequest(Uri.parse(url));
+      }
+    } catch (e) {
+      print('Error loading URL: $e');
+      await _controller.loadRequest(Uri.parse(url));
+    }
+  }
+
+  void _handleUrlInWebView(String url) {
+    _loadUrl(url);
+  }
+
+  void _injectAntiAntiFramingScript() {
+    const script = '''
+      // Anti-anti-framing script
+      Object.defineProperty(window, 'top', {
+        get: function() { return window; }
+      });
+      Object.defineProperty(window, 'parent', {
+        get: function() { return window; }
+      });
+      function neutralizeFrameBusting() {
+        if (window.location !== window.top.location) {
+          window.top.location = window.location;
+        }
+      }
+      ['isSecureContext', 'isLocalhost'].forEach(function(prop) {
+        Object.defineProperty(window, prop, {
+          get: function() { return true; }
+        });
+      });
+      var meta = document.createElement('meta');
+      meta.httpEquiv = 'X-Frame-Options';
+      meta.content = 'ALLOWALL';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+      neutralizeFrameBusting();
+      Flutter.postMessage('Anti-anti-framing script injected');
+    ''';
+
+    _controller.runJavaScript(script);
   }
 
   @override
@@ -141,12 +214,11 @@ class _WebViewPageState extends State<WebViewPage> {
       })();
       ''') as String;
 
-      // Ensure textContent is properly unescaped and formatted
       String cleanedTextContent = _formatText(textContent);
 
       setState(() {
         _textContent = cleanedTextContent;
-        _isLoading = false; // Set loading to false only after text is scraped
+        _isLoading = false;
       });
 
       print('Text Content:');
@@ -157,12 +229,8 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   String _formatText(String text) {
-    // Replace double backslashes with single backslashes
     String formattedText = text.replaceAll('\\\\n', '\n');
-
-    // Optionally, you can replace other escape sequences as needed
     formattedText = formattedText.replaceAll('\\\\t', '\t');
-
     return formattedText;
   }
 
