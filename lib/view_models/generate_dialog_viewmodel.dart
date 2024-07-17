@@ -88,7 +88,7 @@ class GenerateDialogViewModel with ChangeNotifier {
         print(' Server responded with an error');
         _response = sendResult['error'] ?? 'Failed to send text to server.';
         await FirestoreService().updateFirestoreDocumentStatus(
-            fileId, 'error, couldnt send text', userId);
+            fileId, 'Error. Text couldnt be processed', userId);
       }
 
       if (sendResult['success']) {

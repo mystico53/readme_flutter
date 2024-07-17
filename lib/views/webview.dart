@@ -11,6 +11,9 @@ import '../view_models/user_id_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_links/app_links.dart';
 
+const String mobileUserAgent =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1';
+
 class WebViewPage extends StatefulWidget {
   final String url;
 
@@ -77,6 +80,7 @@ class _WebViewPageState extends State<WebViewPage> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
+      ..setUserAgent(mobileUserAgent)
       ..setNavigationDelegate(
         NavigationDelegate(
           onWebResourceError: (WebResourceError error) {
@@ -100,6 +104,8 @@ class _WebViewPageState extends State<WebViewPage> {
           onPageFinished: (String url) {
             _scrapeTextContent();
             _injectAntiAntiFramingScript();
+            _setMobileViewport();
+            _adjustContentToFit();
           },
           onProgress: (int progress) {
             setState(() {
@@ -116,6 +122,38 @@ class _WebViewPageState extends State<WebViewPage> {
       );
 
     _loadUrl(widget.url);
+  }
+
+  void _setMobileViewport() {
+    const script = '''
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'viewport';
+      document.head.appendChild(meta);
+    }
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+  ''';
+    _controller.runJavaScript(script);
+  }
+
+  void _adjustContentToFit() {
+    const script = '''
+    function adjustContent() {
+      document.body.style.width = '100vw';
+      document.body.style.overflowX = 'hidden';
+      var elements = document.body.getElementsByTagName("*");
+      for (var i = 0; i < elements.length; i++) {
+        if (elements[i].offsetWidth > document.body.offsetWidth) {
+          elements[i].style.maxWidth = '100%';
+          elements[i].style.overflowX = 'auto';
+        }
+      }
+    }
+    adjustContent();
+    window.addEventListener('resize', adjustContent);
+  ''';
+    _controller.runJavaScript(script);
   }
 
   bool _shouldHandleInWebView(String url) {
