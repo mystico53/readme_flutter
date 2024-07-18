@@ -222,53 +222,88 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             if (documents.isEmpty) {
                               return Center(
                                 child: Container(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.9, // Set the width to 90% of the screen width
-                                  height:
-                                      250, // Make the list tile 5 rows high (assuming each row is about 50px)
-                                  margin: const EdgeInsets.symmetric(
-                                      vertical: 20), // Ensure vertical padding
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: const Color(0xFF4B473D),
-                                      width: 1.5,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                        5.0), // Add border radius to make it look like a tile
-                                  ),
-                                  child: ListTile(
-                                    title: const Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'Listen with Lisme',
-                                            style: TextStyle(
-                                              color: Color(0xFF4B473D),
-                                              fontSize:
-                                                  24, // Larger font size for "Hi!"
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold text for "Hi!"
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          SizedBox(
-                                              height:
-                                                  8), // Space between the two lines of text
-                                          Text(
-                                            'Please share a website with this app',
-                                            style: TextStyle(
-                                              color: Color(0xFF4B473D),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
+                                    width: MediaQuery.of(context).size.width *
+                                        0.9, // Set the width to 90% of the screen width
+                                    height:
+                                        250, // Make the list tile 5 rows high (assuming each row is about 50px)
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical:
+                                            20), // Ensure vertical padding
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: const Color(0xFF4B473D),
+                                        width: 1.5,
                                       ),
+                                      borderRadius: BorderRadius.circular(
+                                          5.0), // Add border radius to make it look like a tile
                                     ),
-                                    onTap: () {},
-                                  ),
-                                ),
+                                    child: ListTile(
+                                      title: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Text(
+                                              'Listen with Lisme',
+                                              style: TextStyle(
+                                                color: Color(0xFF4B473D),
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            const Text(
+                                              'Please share a website with this app',
+                                              style: TextStyle(
+                                                color: Color(0xFF4B473D),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(
+                                                height:
+                                                    40), // Added space before the button
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.pushNamed(context,
+                                                    '/intropages/intropage_main');
+                                              },
+                                              style: ButtonStyle(
+                                                backgroundColor:
+                                                    MaterialStateProperty.all(
+                                                        const Color(
+                                                            0xFFFFEFC3)),
+                                                foregroundColor:
+                                                    MaterialStateProperty.all(
+                                                        const Color(
+                                                            0xFF4B473D)),
+                                                elevation:
+                                                    MaterialStateProperty.all(
+                                                        0),
+                                                shape:
+                                                    MaterialStateProperty.all(
+                                                        RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.zero,
+                                                  side: const BorderSide(
+                                                    color: Color(0xFF4B473D),
+                                                    width: 1,
+                                                  ),
+                                                )),
+                                                padding:
+                                                    MaterialStateProperty.all(
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 16,
+                                                            vertical: 8)),
+                                              ),
+                                              child: const Text('Show me how'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () {},
+                                    )),
                               );
                             }
 
@@ -445,17 +480,17 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                                       MainAxisSize
                                                                           .min,
                                                                   children: <Widget>[
-                                                                    Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .all(
-                                                                          16.0),
+                                                                    const Padding(
+                                                                      padding:
+                                                                          EdgeInsets.all(
+                                                                              16.0),
                                                                       child:
                                                                           Text(
                                                                         'Confirm Deletion',
                                                                         style:
                                                                             TextStyle(
                                                                           color:
-                                                                              const Color(0xFF4B473D),
+                                                                              Color(0xFF4B473D),
                                                                           fontWeight:
                                                                               FontWeight.bold,
                                                                           fontSize:
@@ -472,13 +507,13 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                                           Text(
                                                                         'Are you sure you want to delete "$title"?',
                                                                         style:
-                                                                            TextStyle(
+                                                                            const TextStyle(
                                                                           color:
-                                                                              const Color(0xFF4B473D),
+                                                                              Color(0xFF4B473D),
                                                                         ),
                                                                       ),
                                                                     ),
-                                                                    SizedBox(
+                                                                    const SizedBox(
                                                                         height:
                                                                             16),
                                                                     Row(
@@ -488,10 +523,10 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                                       children: <Widget>[
                                                                         TextButton(
                                                                           child:
-                                                                              Text(
+                                                                              const Text(
                                                                             'No',
                                                                             style:
-                                                                                TextStyle(color: const Color(0xFF4B473D)),
+                                                                                TextStyle(color: Color(0xFF4B473D)),
                                                                           ),
                                                                           onPressed:
                                                                               () {
@@ -500,10 +535,10 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                                         ),
                                                                         TextButton(
                                                                           child:
-                                                                              Text(
+                                                                              const Text(
                                                                             'Yes',
                                                                             style:
-                                                                                TextStyle(color: const Color(0xFF4B473D)),
+                                                                                TextStyle(color: Color(0xFF4B473D)),
                                                                           ),
                                                                           onPressed:
                                                                               () async {
