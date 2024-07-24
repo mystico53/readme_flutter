@@ -246,7 +246,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               MainAxisAlignment.center,
                                           children: [
                                             const Text(
-                                              'Listen with Lisme',
+                                              'Lisme turns news articles into mini-audiobooks',
                                               style: TextStyle(
                                                 color: Color(0xFF4B473D),
                                                 fontSize: 24,
@@ -256,7 +256,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                             ),
                                             const SizedBox(height: 8),
                                             const Text(
-                                              'Please share a website with this app',
+                                              'Please share a news-article with this app',
                                               style: TextStyle(
                                                 color: Color(0xFF4B473D),
                                               ),
