@@ -31,8 +31,30 @@ class _WebViewPageState extends State<WebViewPage> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   bool _isLoading = true;
+  bool _isCreating = false;
 
-  final Color customColor = const Color(0xFFFFEFC3);
+  final Color customColor = const Color(0xFF4B473D);
+
+  void _handleCreateLisme() {
+    setState(() {
+      _isCreating = true;
+    });
+
+    Timer(const Duration(milliseconds: 1500), () {
+      final generateDialogViewModel =
+          Provider.of<GenerateDialogViewModel>(context, listen: false);
+      final userId =
+          Provider.of<UserIdViewModel>(context, listen: false).userId;
+
+      generateDialogViewModel.generateAndCheckAudio(
+        _textContent,
+        generateDialogViewModel.currentSelectedVoice,
+        userId,
+      );
+
+      Navigator.of(context).pop(); // Close the WebView
+    });
+  }
 
   String _modifyRedirectUrl(String url) {
     final uri = Uri.parse(url);
@@ -274,79 +296,95 @@ class _WebViewPageState extends State<WebViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final userId = Provider.of<UserIdViewModel>(context).userId;
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: customColor,
-        title: const Text(
-          'Convert to Speech',
-          style: TextStyle(
-            color: Color(0xFF4B473D),
+    return WillPopScope(
+      onWillPop: () async => !_isCreating,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: customColor,
+          iconTheme: const IconThemeData(color: Color(0xFFFFEFC3)),
+          title: const Text(
+            'Convert to Speech',
+            style: TextStyle(
+              color: Color(0xFFFFEFC3),
+            ),
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          if (_isLoading)
-            LinearProgressIndicator(
-              value: _progress,
-              backgroundColor: customColor,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF4B473D)),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    width: 2,
-                    color: Colors.black,
-                  ),
-                ),
-                child: WebViewWidget(
-                  controller: _controller,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: customColor,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        body: Column(
           children: [
-            VoiceSelectionWidget(
-              onSelectedVoiceChanged: (VoiceModel voice) {
-                print("Updating selected voice to: ${voice.name}");
-                Provider.of<GenerateDialogViewModel>(context, listen: false)
-                    .updateSelectedVoice(voice);
-              },
-            ),
-            TextButton(
-              onPressed: _isLoading
-                  ? null
-                  : () {
-                      final generateDialogViewModel =
-                          Provider.of<GenerateDialogViewModel>(context,
-                              listen: false);
-                      generateDialogViewModel.generateAndCheckAudio(
-                        _textContent,
-                        generateDialogViewModel.currentSelectedVoice,
-                        userId,
-                      );
-                      Navigator.pop(context);
-                    },
-              child: Text(
-                _isLoading ? 'Loading...' : 'Create Lisme',
-                style: TextStyle(
-                  color: _isLoading ? Colors.grey : const Color(0xFF4B473D),
+            if (_isLoading)
+              LinearProgressIndicator(
+                value: _progress,
+                backgroundColor: customColor,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFEFC3)),
+              ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 2,
+                      color: Colors.black,
+                    ),
+                  ),
+                  child: WebViewWidget(
+                    controller: _controller,
+                  ),
                 ),
               ),
             ),
           ],
+        ),
+        bottomNavigationBar: BottomAppBar(
+          color: const Color(0xFFFFEFC3),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Tooltip(
+                message: 'Choose a voice for text-to-speech conversion',
+                preferBelow: false,
+                child: VoiceSelectionWidget(
+                  onSelectedVoiceChanged: (VoiceModel voice) {
+                    print("Updating selected voice to: ${voice.name}");
+                    Provider.of<GenerateDialogViewModel>(context, listen: false)
+                        .updateSelectedVoice(voice);
+                  },
+                ),
+              ),
+              ElevatedButton(
+                onPressed:
+                    (_isLoading || _isCreating) ? null : _handleCreateLisme,
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all(const Color(0xFF4B473D)),
+                  foregroundColor:
+                      MaterialStateProperty.all(const Color(0xFFFFEFC3)),
+                  elevation: MaterialStateProperty.all(0),
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
+                    side: const BorderSide(
+                      color: Color(0xFF4B473D),
+                      width: 1,
+                    ),
+                  )),
+                  padding: MaterialStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+                child: Text(
+                  _isLoading
+                      ? 'Loading...'
+                      : (_isCreating ? 'Creating...' : 'Create Lisme'),
+                  style: const TextStyle(
+                    color: Color(0xFFFFEFC3),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

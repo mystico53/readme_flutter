@@ -13,52 +13,53 @@ class VoiceSelectionWidget extends StatefulWidget {
 class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
   List<VoiceModel> voices = [
     VoiceModel(
-        name: "🇺🇸 Craig (News)",
+        name: "🇺🇸 Craig's Voice (News)",
         languageCode: "en-US",
-        voiceName: "en-US-News-N",
+        //voiceName: "en-US-News-N",
+        voiceName: "en-US-Standard-D",
         speakingRate: 0.85),
     VoiceModel(
-        name: "🇺🇸 Gordon",
+        name: "🇺🇸 Gordon's Voice",
         languageCode: "en-US",
         voiceName: "en-US-Neural2-J",
         speakingRate: 0.9),
     VoiceModel(
-        name: "🇺🇸 Malcolm (Poly)",
+        name: "🇺🇸 Malcolm's Voice (Poly)",
         languageCode: "en-US",
         voiceName: "en-US-Polyglot-1",
         speakingRate: 0.85),
     VoiceModel(
-        name: "🇺🇸 Serene (Elite)",
+        name: "🇺🇸 Serene's Voice (Elite)",
         languageCode: "en-US",
         voiceName: "en-US-Studio-O",
         speakingRate: 0.85),
     VoiceModel(
-        name: "🇺🇸 Franky (Elite)",
+        name: "🇺🇸 Franky's Voice (Elite)",
         languageCode: "en-US",
         voiceName: "en-US-Studio-Q",
         speakingRate: 0.9),
     VoiceModel(
-        name: "🇬🇧 Bishop",
+        name: "🇬🇧 Bishop's Voice",
         languageCode: "en-GB",
         voiceName: "en-GB-Neural2-D",
         speakingRate: 0.85),
     VoiceModel(
-        name: "🇩🇪 Sabine",
+        name: "🇩🇪 Sabine's Voice",
         languageCode: "de-DE",
         voiceName: "de-DE-Neural2-C",
         speakingRate: 1.0),
     VoiceModel(
-        name: "🇩🇪 Rüdiger (Poly)",
+        name: "🇩🇪 Rüdiger's Voice (Poly)",
         languageCode: "de-DE",
         voiceName: "de-DE-Polyglot-1",
         speakingRate: 1.0),
     VoiceModel(
-        name: "🇩🇪 Stefan (Elite)",
+        name: "🇩🇪 Stefan's Voice (Elite)",
         languageCode: "de-DE",
         voiceName: "de-DE-Studio-B",
         speakingRate: 1.0),
     VoiceModel(
-        name: "🇩🇪 Jutta (Elite)",
+        name: "🇩🇪 Jutta's Voice (Elite)",
         languageCode: "de-DE",
         voiceName: "de-DE-Studio-C",
         speakingRate: 1.0)
@@ -88,7 +89,7 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
           value: selectedVoice,
           hint: Text(
             "Select a voice",
-            style: TextStyle(color: Color(0xFF4B473D)),
+            style: TextStyle(color: Color(0xFF4B473D), fontSize: 16),
           ),
           onChanged: (VoiceModel? newValue) {
             if (newValue != null) {
@@ -103,16 +104,16 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
               value: voice,
               child: Text(
                 voice.name,
-                style: TextStyle(color: Color(0xFF4B473D)),
+                style:
+                    TextStyle(color: Color(0xFF4B473D)), //font color in webview
               ),
             );
           }).toList(),
-          iconEnabledColor: Color(0xFF4B473D),
-          style: TextStyle(color: Color(0xFF4B473D)),
+          iconEnabledColor: Color(0xFF4B473D), //
+          style: TextStyle(color: Color(0xFFFFEFC3), fontSize: 16),
           underline: SizedBox(),
           isDense: true,
-          isExpanded:
-              true, // Ensure the dropdown expands to fill the container width
+          isExpanded: true,
         ),
       ),
     );

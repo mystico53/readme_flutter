@@ -246,7 +246,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               MainAxisAlignment.center,
                                           children: [
                                             const Text(
-                                              'Lisme turns news articles into mini-audiobooks',
+                                              'Listen \n to your news articles \n on a playlist',
                                               style: TextStyle(
                                                 color: Color(0xFF4B473D),
                                                 fontSize: 24,
@@ -254,17 +254,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
-                                            const SizedBox(height: 8),
-                                            const Text(
-                                              'Please share a news-article with this app',
-                                              style: TextStyle(
-                                                color: Color(0xFF4B473D),
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            const SizedBox(
-                                                height:
-                                                    40), // Added space before the button
+                                            const SizedBox(height: 24),
                                             ElevatedButton(
                                               onPressed: () {
                                                 Navigator.pushNamed(context,
@@ -299,7 +289,14 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                             horizontal: 16,
                                                             vertical: 8)),
                                               ),
-                                              child: const Text('Show me how'),
+                                              child: const Text(
+                                                'Show me how',
+                                                style: TextStyle(
+                                                  color: Color(0xFF4B473D),
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),

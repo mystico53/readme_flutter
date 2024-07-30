@@ -31,7 +31,7 @@ class IntropageHowto extends StatelessWidget {
           ),
           SizedBox(height: 20),
           Text(
-            'You are one step away from \n your first mini-audiobook.',
+            'Share any news article with Lisme',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 20,
@@ -59,12 +59,17 @@ class IntropageHowto extends StatelessWidget {
                       width: 1,
                     ),
                   )),
-                  padding: MaterialStateProperty.all(const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  )),
+                  padding: MaterialStateProperty.all(
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
                 ),
-                child: const Text("I don't want to"),
+                child: const Text(
+                  'Go back',
+                  style: TextStyle(
+                    color: Color(0xFF4B473D),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -74,9 +79,9 @@ class IntropageHowto extends StatelessWidget {
                 },
                 style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all(const Color(0xFFFFEFC3)),
-                  foregroundColor:
                       MaterialStateProperty.all(const Color(0xFF4B473D)),
+                  foregroundColor:
+                      MaterialStateProperty.all(const Color(0xFFFFEFC3)),
                   elevation: MaterialStateProperty.all(0),
                   shape: MaterialStateProperty.all(RoundedRectangleBorder(
                     borderRadius: BorderRadius.zero,
@@ -85,12 +90,17 @@ class IntropageHowto extends StatelessWidget {
                       width: 1,
                     ),
                   )),
-                  padding: MaterialStateProperty.all(const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  )),
+                  padding: MaterialStateProperty.all(
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
                 ),
-                child: const Text('I can do this'),
+                child: const Text(
+                  'Let me try',
+                  style: TextStyle(
+                    color: Color(0xFFFFEFC3),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ],
           ),
