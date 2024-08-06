@@ -14,10 +14,21 @@ import 'package:flutter/rendering.dart';
 import '/intropages/intropage_main.dart';
 import 'package:feedback/feedback.dart';
 import '../view_models/main_screen_view_model.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:readme_app/services/audio_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
+
+  final audioHandler = await AudioService.init(
+    builder: () => MyAudioHandler(),
+    config: AudioServiceConfig(
+      androidNotificationChannelId: 'com.mystical.lisme',
+      androidNotificationChannelName: 'Audio playback',
+      androidNotificationOngoing: true,
+    ),
+  );
 
   runApp(
     MultiProvider(
@@ -29,6 +40,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),
         ChangeNotifierProvider(create: (context) => AudioPlayerViewModel()),
+        Provider<AudioHandler>.value(value: audioHandler),
         // Retrieve the userId from UserIdViewModel
         ChangeNotifierProvider(
           create: (context) {
