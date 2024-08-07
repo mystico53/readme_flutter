@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:readme_app/utils/app_config.dart';
+import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import 'package:readme_app/widgets/voice_selection_widget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:provider/provider.dart';
@@ -92,7 +93,8 @@ class _WebViewPageState extends State<WebViewPage> {
   void initState() {
     super.initState();
     final userId = Provider.of<UserIdViewModel>(context, listen: false).userId;
-    _generateDialogViewModel = GenerateDialogViewModel(userId);
+    _generateDialogViewModel = GenerateDialogViewModel(
+        userId, Provider.of<AudioPlayerViewModel>(context, listen: false));
 
     _initializeWebView();
     initAppLinks();

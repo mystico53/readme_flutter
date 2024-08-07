@@ -11,13 +11,12 @@ import '../utils/id_manager.dart';
 import 'package:just_audio/just_audio.dart';
 
 class GenerateDialogViewModel with ChangeNotifier {
-  GenerateDialogViewModel(this.userId) {
-    listenToFirestoreChanges();
-    _audioPlayerViewModel = AudioPlayerViewModel();
-  }
-
   final String userId;
-  late final AudioPlayerViewModel _audioPlayerViewModel;
+  final AudioPlayerViewModel audioPlayerViewModel;
+
+  GenerateDialogViewModel(this.userId, this.audioPlayerViewModel) {
+    listenToFirestoreChanges();
+  }
   String _response = '';
   int characterCount = 0;
 
@@ -137,7 +136,7 @@ class GenerateDialogViewModel with ChangeNotifier {
                 print('Succes: Audio duration written to firestore');
 
                 // Call the _saveProgress function from AudioPlayerViewModel
-                await _audioPlayerViewModel.saveProgress(fileId, Duration.zero);
+                await audioPlayerViewModel.saveProgress(fileId, Duration.zero);
               } else {
                 print('Audio duration is null for fileId: $fileId');
               }

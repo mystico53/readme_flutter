@@ -21,15 +21,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
 
-  final audioPlayerViewModel = AudioPlayerViewModel();
+  final myAudioHandler = MyAudioHandler();
+
   final audioHandler = await AudioService.init(
-    builder: () => MyAudioHandler(audioPlayerViewModel),
+    builder: () => myAudioHandler,
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.mystical.lisme',
       androidNotificationChannelName: 'Audio playback',
       androidNotificationOngoing: true,
     ),
   );
+
+  final audioPlayerViewModel = AudioPlayerViewModel(audioHandler);
+
+  myAudioHandler.setViewModel(audioPlayerViewModel);
 
   runApp(
     MultiProvider(
@@ -42,7 +47,6 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),
         ChangeNotifierProvider.value(value: audioPlayerViewModel),
         Provider<AudioHandler>.value(value: audioHandler),
-        // Retrieve the userId from UserIdViewModel
         ChangeNotifierProvider(
           create: (context) {
             final userIdViewModel =
@@ -50,16 +54,17 @@ void main() async {
             return MainScreenViewModel(userIdViewModel.userId);
           },
         ),
-        // Add other providers here
+        // Update this provider
+        ChangeNotifierProvider(
+          create: (context) => GenerateDialogViewModel(
+            Provider.of<UserIdViewModel>(context, listen: false).userId,
+            Provider.of<AudioPlayerViewModel>(context, listen: false),
+          ),
+        ),
       ],
       child: Builder(
         builder: (context) {
-          return ChangeNotifierProvider(
-            create: (context) => GenerateDialogViewModel(
-              Provider.of<UserIdViewModel>(context, listen: false).userId,
-            ),
-            child: MyApp(),
-          );
+          return MyApp();
         },
       ),
     ),

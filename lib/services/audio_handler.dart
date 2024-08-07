@@ -1,15 +1,17 @@
-// lib/services/audio_handler.dart
-
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 
 class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer _player = AudioPlayer();
-  final AudioPlayerViewModel _viewModel;
+  late AudioPlayerViewModel _viewModel;
 
-  MyAudioHandler(this._viewModel) {
+  MyAudioHandler() {
     _player.playbackEventStream.listen(_broadcastState);
+  }
+
+  void setViewModel(AudioPlayerViewModel viewModel) {
+    _viewModel = viewModel;
     _player.positionStream.listen((position) {
       _viewModel.updatePosition(position);
     });
@@ -42,13 +44,11 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
     // Update the mediaItem
     mediaItem.add(MediaItem(
-      id: url, // Using the URL as the ID, you might want to use a different ID system
-      album:
-          "Unknown Album", // You might want to pass these details from elsewhere
+      id: url,
+      album: "Unknown Album",
       title: "Audio Track",
       artist: "Unknown Artist",
       duration: duration,
-      // artUri: Uri.parse('https://example.com/albumart.jpg'),  // If you have album art
     ));
   }
 

@@ -43,6 +43,27 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     super.initState();
     _audioHandler = Provider.of<AudioHandler>(context, listen: false);
     _initAudio();
+    _listenToAudioHandlerState();
+  }
+
+  void _listenToAudioHandlerState() {
+    _audioHandler.playbackState.listen((state) {
+      setState(() {
+        _isPlaying = state.playing;
+        _currentPosition = state.position;
+        _isBuffering = state.processingState == AudioProcessingState.buffering;
+      });
+      widget.viewModel.setPlaying(state.playing);
+      widget.viewModel.updatePosition(state.position);
+    });
+
+    (_audioHandler as MyAudioHandler).currentMediaItem.listen((mediaItem) {
+      if (mediaItem != null) {
+        setState(() {
+          _totalDuration = mediaItem.duration ?? Duration.zero;
+        });
+      }
+    });
   }
 
   @override
@@ -68,13 +89,25 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     try {
       await (_audioHandler as MyAudioHandler).setAudioSource(widget.audioUrl);
 
-      // Wait for the duration to be available
       _totalDuration = await (_audioHandler as MyAudioHandler).getDuration() ??
           Duration.zero;
-
       await _audioHandler.setSpeed(_playbackSpeed);
 
-      // ... rest of your initialization code ...
+      Duration? storedPosition =
+          await widget.viewModel.getStoredPosition(widget.fileId);
+      if (storedPosition != null) {
+        await _audioHandler.seek(storedPosition);
+        _currentPosition = storedPosition;
+      }
+
+      widget.viewModel.startPeriodicUpdate(_totalDuration, widget.fileId);
+
+      setState(() {
+        _isAudioLoaded = true;
+        _errorMessage = '';
+      });
+
+      await _audioHandler.play();
     } catch (e) {
       print('Error setting audio source: ${e.toString()}');
       setState(() {
@@ -302,9 +335,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               GestureDetector(
                 onLongPress: () async {
                   await _audioHandler.seek(_currentPosition);
-                  setState(() {
-                    _isPlaying = true;
-                  });
                   await _audioHandler.play();
                 },
                 child: IconButton(
@@ -314,9 +344,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     } else {
                       if (_currentPosition >= _totalDuration) {
                         await _audioHandler.seek(Duration.zero);
-                        setState(() {
-                          _currentPosition = Duration.zero;
-                        });
                       }
                       await _audioHandler.play();
                     }

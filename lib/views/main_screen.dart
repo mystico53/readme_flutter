@@ -33,7 +33,6 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   String sharedContent = "";
   bool isDialogOpen = false;
   String selectedFileId = '';
-  final audioPlayerViewModel = AudioPlayerViewModel();
   SharedPreferences? _prefs;
   late VoidCallback _progressListener;
   Map<String, double> _fileProgress = {};
@@ -45,17 +44,8 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    final intentViewModel =
-        Provider.of<IntentViewModel>(context, listen: false);
-    intentViewModel.addListener(_handleIntentViewModelChange);
-    //_intentViewModel = intentViewModel; //for webview only
-    //_intentViewModel!.startListeningForIntents(context); //for webview only
-    SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        _prefs = prefs;
-      });
-    });
-
+    final audioPlayerViewModel =
+        Provider.of<AudioPlayerViewModel>(context, listen: false);
     _progressListener = () {
       final fileId = audioPlayerViewModel.currentFileId;
       final progress = audioPlayerViewModel.lastProgressPercentage;
@@ -160,6 +150,8 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.removeListener(_handleIntentViewModelChange);
     _intentViewModel?.removeListener(_handleIntentViewModelChange);
+    final audioPlayerViewModel =
+        Provider.of<AudioPlayerViewModel>(context, listen: false);
     audioPlayerViewModel.removeListener(_progressListener);
     _animationController.dispose();
     super.dispose();
@@ -168,6 +160,8 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // Log when the build method is called
+
+    final audioPlayerViewModel = Provider.of<AudioPlayerViewModel>(context);
 
     final generateDialogViewModel =
         Provider.of<GenerateDialogViewModel>(context);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,13 +15,22 @@ class AudioPlayerViewModel extends ChangeNotifier {
   Duration get maxReportedPosition => _maxReportedPosition ?? Duration.zero;
   int _totalTimePlayed = 0;
   int get totalTimePlayed => _totalTimePlayed;
+  late AudioHandler _audioHandler;
+
+  AudioPlayerViewModel(this._audioHandler) {
+    _loadPrefs();
+    _listenToAudioHandlerState();
+  }
+
+  void _listenToAudioHandlerState() {
+    _audioHandler.playbackState.listen((state) {
+      setPlaying(state.playing);
+      updatePosition(state.position);
+    });
+  }
 
   // Added SharedPreferences instance
   SharedPreferences? _prefs;
-
-  AudioPlayerViewModel() {
-    _loadPrefs();
-  }
 
   // Asynchronously load the SharedPreferences instance
   Future<void> _loadPrefs() async {
