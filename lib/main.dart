@@ -21,8 +21,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
 
+  final audioPlayerViewModel = AudioPlayerViewModel();
   final audioHandler = await AudioService.init(
-    builder: () => MyAudioHandler(),
+    builder: () => MyAudioHandler(audioPlayerViewModel),
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.mystical.lisme',
       androidNotificationChannelName: 'Audio playback',
@@ -39,7 +40,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => TextCleanerViewModel()),
         ChangeNotifierProvider(create: (context) => IntentViewModel()),
         ChangeNotifierProvider(create: (_) => UserIdViewModel()),
-        ChangeNotifierProvider(create: (context) => AudioPlayerViewModel()),
+        ChangeNotifierProvider.value(value: audioPlayerViewModel),
         Provider<AudioHandler>.value(value: audioHandler),
         // Retrieve the userId from UserIdViewModel
         ChangeNotifierProvider(
