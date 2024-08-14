@@ -44,6 +44,9 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _intentViewModel = Provider.of<IntentViewModel>(context, listen: false);
+    _intentViewModel?.addListener(_handleIntentViewModelChange);
+    print("Debug: IntentViewModel listener added");
     final audioPlayerViewModel =
         Provider.of<AudioPlayerViewModel>(context, listen: false);
     _progressListener = () {

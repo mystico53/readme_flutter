@@ -21,6 +21,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
 
+  print("Debug: Firebase initialized"); // Debug statement
+
   final myAudioHandler = MyAudioHandler();
 
   final audioHandler = await AudioService.init(
@@ -31,6 +33,8 @@ void main() async {
       androidNotificationOngoing: true,
     ),
   );
+
+  print("Debug: AudioService initialized"); // Debug statement
 
   final audioPlayerViewModel = AudioPlayerViewModel(audioHandler);
 
@@ -54,7 +58,6 @@ void main() async {
             return MainScreenViewModel(userIdViewModel.userId);
           },
         ),
-        // Update this provider
         ChangeNotifierProvider(
           create: (context) => GenerateDialogViewModel(
             Provider.of<UserIdViewModel>(context, listen: false).userId,
@@ -64,6 +67,7 @@ void main() async {
       ],
       child: Builder(
         builder: (context) {
+          print("Debug: Providers set up"); // Debug statement
           return MyApp();
         },
       ),
@@ -82,6 +86,7 @@ class MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    print("Debug: MyAppState initState called"); // Debug statement
     Future.microtask(() async {
       await _initializeUserId();
       _initializeIntentHandling();
@@ -89,20 +94,27 @@ class MyAppState extends State<MyApp> {
   }
 
   Future<void> _initializeUserId() async {
+    print("Debug: Initializing UserId"); // Debug statement
     final userIdViewModel =
         Provider.of<UserIdViewModel>(context, listen: false);
     await userIdViewModel.initUserId();
+    print(
+        "Debug: UserId initialized: ${userIdViewModel.userId}"); // Debug statement
   }
 
   void _initializeIntentHandling() {
+    print("Debug: Initializing Intent Handling"); // Debug statement
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.loadInitialSharedFiles();
+    print("Debug: Initial shared files loaded"); // Debug statement
     intentViewModel.startListeningForIntents(context);
+    print("Debug: Started listening for intents"); // Debug statement
   }
 
   @override
   Widget build(BuildContext context) {
+    print("Debug: MyApp build method called"); // Debug statement
     return BetterFeedback(
       child: MaterialApp(
         theme: ThemeData(
@@ -110,10 +122,8 @@ class MyAppState extends State<MyApp> {
           textTheme: GoogleFonts.hindTextTheme(
             Theme.of(context).textTheme,
           ).apply(
-            // Applying a color to all text styles within the text theme
-            bodyColor: Color(0xFF4B473D), // Set the default text color
-            displayColor:
-                Color(0xFF4B473D), // Used for headings and other display texts
+            bodyColor: Color(0xFF4B473D),
+            displayColor: Color(0xFF4B473D),
           ),
         ),
         home: const MainScreen(),
