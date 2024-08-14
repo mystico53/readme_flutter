@@ -36,20 +36,20 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   @override
   Future<void> setSpeed(double speed) => _player.setSpeed(speed);
 
-  Future<void> setAudioSource(String url) async {
+  Future<void> setAudioSource(String url, String fileId) async {
     await _player.setAudioSource(AudioSource.uri(Uri.parse(url)));
 
-    // Wait for the duration to be available
     final duration = await _player.duration;
 
-    // Update the mediaItem
     mediaItem.add(MediaItem(
-      id: url,
+      id: fileId, // Use fileId instead of url
       album: "Unknown Album",
       title: "Audio Track",
       artist: "Unknown Artist",
       duration: duration,
     ));
+
+    _viewModel.setCurrentFileId(fileId);
   }
 
   Stream<MediaItem?> get currentMediaItem => mediaItem.stream;

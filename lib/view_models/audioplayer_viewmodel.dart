@@ -118,6 +118,22 @@ class AudioPlayerViewModel extends ChangeNotifier {
   void updatePosition(Duration currentPosition) {
     if (currentPosition > _maxReportedPosition) {
       _maxReportedPosition = currentPosition;
+      if (_currentFileId != null &&
+          _audioHandler.mediaItem.value?.duration != null) {
+        _lastProgressPercentage = (currentPosition.inMilliseconds /
+                _audioHandler.mediaItem.value!.duration!.inMilliseconds) *
+            100;
+        notifyListeners(); // This will notify all listeners, including MainScreen
+      }
+    }
+  }
+
+  void setCurrentFileId(String fileId) {
+    if (_currentFileId != fileId) {
+      _currentFileId = fileId;
+      _maxReportedPosition = Duration.zero;
+      _lastProgressPercentage = 0.0;
+      notifyListeners();
     }
   }
 

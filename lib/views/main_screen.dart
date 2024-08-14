@@ -340,10 +340,13 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                           : 0;
                                   final totalDuration =
                                       Duration(seconds: durationInSeconds ?? 0);
-                                  final progress = totalDuration.inSeconds > 0
-                                      ? (savedProgress /
-                                          totalDuration.inMilliseconds)
-                                      : 0.0;
+                                  final progress =
+                                      audioPlayerViewModel.currentFileId ==
+                                              fileId
+                                          ? audioPlayerViewModel
+                                                  .lastProgressPercentage /
+                                              100
+                                          : 0.0;
 
                                   bool isSelected = selectedFileId == fileId;
                                   Color tileColor = isSelected

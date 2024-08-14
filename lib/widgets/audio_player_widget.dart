@@ -50,11 +50,11 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     _audioHandler.playbackState.listen((state) {
       setState(() {
         _isPlaying = state.playing;
-        _currentPosition = state.position;
+        _currentPosition = state.updatePosition;
         _isBuffering = state.processingState == AudioProcessingState.buffering;
       });
       widget.viewModel.setPlaying(state.playing);
-      widget.viewModel.updatePosition(state.position);
+      widget.viewModel.updatePosition(state.updatePosition);
     });
 
     (_audioHandler as MyAudioHandler).currentMediaItem.listen((mediaItem) {
@@ -87,7 +87,12 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     }
 
     try {
-      await (_audioHandler as MyAudioHandler).setAudioSource(widget.audioUrl);
+      // Replace this line
+      // await (_audioHandler as MyAudioHandler).setAudioSource(widget.audioUrl);
+      // With this line
+      await (_audioHandler as MyAudioHandler)
+          .setAudioSource(widget.audioUrl, widget.fileId);
+      widget.viewModel.setCurrentFileId(widget.fileId);
 
       _totalDuration = await (_audioHandler as MyAudioHandler).getDuration() ??
           Duration.zero;
@@ -97,7 +102,9 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           await widget.viewModel.getStoredPosition(widget.fileId);
       if (storedPosition != null) {
         await _audioHandler.seek(storedPosition);
-        _currentPosition = storedPosition;
+        setState(() {
+          _currentPosition = storedPosition;
+        });
       }
 
       widget.viewModel.startPeriodicUpdate(_totalDuration, widget.fileId);
