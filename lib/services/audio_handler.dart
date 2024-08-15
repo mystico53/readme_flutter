@@ -45,8 +45,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     // Update the ViewModel with the new track information
     _viewModel.setTrackInfo(
       title: title ?? 'Unknown Title',
-      artist: artist,
-      album: album,
+      artist: artist ?? 'Lisme',
+      album: album ?? 'Lisme',
     );
 
     // Create and update the MediaItem
@@ -77,10 +77,10 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     final playing = _player.playing;
     playbackState.add(playbackState.value.copyWith(
       controls: [
-        MediaControl.rewind,
+        //MediaControl.rewind,
         if (playing) MediaControl.pause else MediaControl.play,
         MediaControl.stop,
-        MediaControl.fastForward,
+        //MediaControl.fastForward,
       ],
       systemActions: const {
         MediaAction.seek,
