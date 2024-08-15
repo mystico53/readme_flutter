@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:readme_app/services/audio_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AudioPlayerViewModel extends ChangeNotifier {
@@ -17,9 +18,42 @@ class AudioPlayerViewModel extends ChangeNotifier {
   int get totalTimePlayed => _totalTimePlayed;
   late AudioHandler _audioHandler;
 
+  // New fields for track information
+  String _title = "Unknown Title";
+  String _artist = "Lisme";
+  String _album = "Lisme";
+
+  // Getters for track information
+  String get title => _title;
+  String get artist => _artist;
+  String get album => _album;
+
   AudioPlayerViewModel(this._audioHandler) {
     _loadPrefs();
     _listenToAudioHandlerState();
+  }
+
+  void setTrackInfo({required String title, String? artist, String? album}) {
+    _title = title;
+    _artist = artist ?? "Lisme";
+    _album = album ?? "Lisme";
+    notifyListeners();
+
+    // Update the MediaItem in the AudioHandler
+    _updateMediaItem();
+  }
+
+  void _updateMediaItem() {
+    if (_currentFileId != null) {
+      final mediaItem = MediaItem(
+        id: _currentFileId!,
+        album: _album,
+        title: _title,
+        artist: _artist,
+        duration: _audioHandler.mediaItem.value?.duration,
+      );
+      (_audioHandler as MyAudioHandler).updateMediaItem(mediaItem);
+    }
   }
 
   void _listenToAudioHandlerState() {

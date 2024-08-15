@@ -10,6 +10,8 @@ class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
   final String audioTitle;
   final String fileId;
+  final String? artist;
+  final String? album;
 
   Duration get maxReportedPosition => viewModel.maxReportedPosition;
 
@@ -20,6 +22,8 @@ class AudioPlayerWidget extends StatefulWidget {
     required this.audioUrl,
     required this.audioTitle,
     required this.fileId,
+    this.artist,
+    this.album,
     required this.viewModel,
   }) : super(key: key);
 
@@ -42,6 +46,11 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void initState() {
     super.initState();
     _audioHandler = Provider.of<AudioHandler>(context, listen: false);
+    widget.viewModel.setTrackInfo(
+      title: widget.audioTitle,
+      artist: widget.artist,
+      album: widget.album,
+    );
     _initAudio();
     _listenToAudioHandlerState();
   }
@@ -50,11 +59,11 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     _audioHandler.playbackState.listen((state) {
       setState(() {
         _isPlaying = state.playing;
-        _currentPosition = state.updatePosition;
+        _currentPosition = state.position;
         _isBuffering = state.processingState == AudioProcessingState.buffering;
       });
       widget.viewModel.setPlaying(state.playing);
-      widget.viewModel.updatePosition(state.updatePosition);
+      widget.viewModel.updatePosition(state.position);
     });
 
     (_audioHandler as MyAudioHandler).currentMediaItem.listen((mediaItem) {
@@ -87,11 +96,13 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     }
 
     try {
-      // Replace this line
-      // await (_audioHandler as MyAudioHandler).setAudioSource(widget.audioUrl);
-      // With this line
-      await (_audioHandler as MyAudioHandler)
-          .setAudioSource(widget.audioUrl, widget.fileId);
+      await (_audioHandler as MyAudioHandler).setAudioSource(
+        widget.audioUrl,
+        widget.fileId,
+        title: widget.audioTitle,
+        artist: widget.artist,
+        album: widget.album,
+      );
       widget.viewModel.setCurrentFileId(widget.fileId);
 
       _totalDuration = await (_audioHandler as MyAudioHandler).getDuration() ??
@@ -217,7 +228,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  widget.audioTitle,
+                  '${widget.viewModel.title} - ${widget.viewModel.artist}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
