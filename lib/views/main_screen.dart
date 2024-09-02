@@ -47,8 +47,11 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _intentViewModel = Provider.of<IntentViewModel>(context, listen: false);
     _intentViewModel?.addListener(_handleIntentViewModelChange);
     print("Debug: IntentViewModel listener added");
+    Provider.of<AudioPlayerViewModel>(context, listen: false)
+        .loadAllFileProgress();
     final audioPlayerViewModel =
         Provider.of<AudioPlayerViewModel>(context, listen: false);
+    audioPlayerViewModel.loadAllFileProgress();
     _progressListener = () {
       final fileId = audioPlayerViewModel.currentFileId;
       final progress = audioPlayerViewModel.lastProgressPercentage;
@@ -340,13 +343,9 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                           : 0;
                                   final totalDuration =
                                       Duration(seconds: durationInSeconds ?? 0);
-                                  final progress =
-                                      audioPlayerViewModel.currentFileId ==
-                                              fileId
-                                          ? audioPlayerViewModel
-                                                  .lastProgressPercentage /
-                                              100
-                                          : 0.0;
+                                  final progress = audioPlayerViewModel
+                                          .allFileProgress[fileId] ??
+                                      0.0;
 
                                   bool isSelected = selectedFileId == fileId;
                                   Color tileColor = isSelected

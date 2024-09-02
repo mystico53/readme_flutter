@@ -5,13 +5,14 @@ class IntentService {
   StreamSubscription? _intentSub;
 
   Future<List<SharedMediaFile>> getInitialSharedFiles() async {
-    // Updated method to get initial media
+    print("IntentService: Getting initial shared files");
     final files = await ReceiveSharingIntent.instance.getInitialMedia();
+    print("IntentService: Received ${files.length} initial shared files");
     return files;
   }
 
   Stream<List<SharedMediaFile>> getSharedFilesStream() {
-    // Updated method to get media stream
+    print("IntentService: Getting shared files stream");
     return ReceiveSharingIntent.instance.getMediaStream();
   }
 
@@ -20,7 +21,9 @@ class IntentService {
   }
 
   void startListening() {
+    print("IntentService: Starting to listen for shared files");
     _intentSub = getSharedFilesStream().listen((List<SharedMediaFile> files) {
+      print("IntentService: Received ${files.length} shared files");
       // Handle received files
     });
   }

@@ -3,6 +3,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:readme_app/services/audio_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AudioPlayerViewModel extends ChangeNotifier {
   late Duration _maxReportedPosition = Duration.zero;
@@ -18,6 +19,12 @@ class AudioPlayerViewModel extends ChangeNotifier {
   int get totalTimePlayed => _totalTimePlayed;
   late AudioHandler _audioHandler;
 
+  // New map to store progress for all files
+  Map<String, double> _allFileProgress = {};
+
+  // Getter for all file progress
+  Map<String, double> get allFileProgress => _allFileProgress;
+
   // New fields for track information
   String _title = "Unknown Title";
   String _artist = "Lisme";
@@ -31,6 +38,7 @@ class AudioPlayerViewModel extends ChangeNotifier {
   AudioPlayerViewModel(this._audioHandler) {
     _loadPrefs();
     _listenToAudioHandlerState();
+    loadAllFileProgress();
   }
 
   void setTrackInfo({required String title, String? artist, String? album}) {
@@ -149,6 +157,41 @@ class AudioPlayerViewModel extends ChangeNotifier {
     return null;
   }
 
+  // New method to load progress for all files
+  Future<void> loadAllFileProgress() async {
+    if (_prefs == null) {
+      await _loadPrefs();
+    }
+
+    // Fetch all audio files from Firestore
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('audioFiles').get();
+
+    for (var doc in querySnapshot.docs) {
+      final fileId = doc.id;
+      final data = doc.data();
+      final durationInSeconds = data['duration'] as int?;
+
+      if (durationInSeconds != null) {
+        final savedProgressString = _prefs!.getString(fileId);
+        final savedProgress =
+            savedProgressString != null ? int.parse(savedProgressString) : 0;
+        final totalDuration = Duration(seconds: durationInSeconds);
+        final progress = savedProgress / totalDuration.inMilliseconds;
+
+        _allFileProgress[fileId] = progress;
+      }
+    }
+
+    notifyListeners();
+  }
+
+  // Method to update progress for a specific file
+  void updateFileProgress(String fileId, double progress) {
+    _allFileProgress[fileId] = progress;
+    notifyListeners();
+  }
+
   void updatePosition(Duration currentPosition) {
     if (currentPosition > _maxReportedPosition) {
       _maxReportedPosition = currentPosition;
@@ -157,7 +200,11 @@ class AudioPlayerViewModel extends ChangeNotifier {
         _lastProgressPercentage = (currentPosition.inMilliseconds /
                 _audioHandler.mediaItem.value!.duration!.inMilliseconds) *
             100;
-        notifyListeners(); // This will notify all listeners, including MainScreen
+
+        // Update the progress in the allFileProgress map
+        _allFileProgress[_currentFileId!] = _lastProgressPercentage / 100;
+
+        notifyListeners();
       }
     }
   }
