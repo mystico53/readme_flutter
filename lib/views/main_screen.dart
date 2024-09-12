@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -34,11 +32,11 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   bool isDialogOpen = false;
   String selectedFileId = '';
   SharedPreferences? _prefs;
-  late VoidCallback _progressListener;
+
   Map<String, double> _fileProgress = {};
   IntentViewModel? _intentViewModel; //for webview only
+  Timer? _debounceTimer;
 
-  Timer? _timer; // Define a timer
   late AnimationController _animationController;
 
   @override
@@ -52,15 +50,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final audioPlayerViewModel =
         Provider.of<AudioPlayerViewModel>(context, listen: false);
     audioPlayerViewModel.loadAllFileProgress();
-    _progressListener = () {
-      final fileId = audioPlayerViewModel.currentFileId;
-      final progress = audioPlayerViewModel.lastProgressPercentage;
-      if (fileId != null) {
-        setState(() {
-          _fileProgress[fileId] = progress;
-        });
-      }
-    };
+
     audioPlayerViewModel.addListener(_progressListener);
 
     _animationController = AnimationController(
@@ -69,7 +59,30 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     )..repeat();
   }
 
+  void _progressListener() {
+    final audioPlayerViewModel =
+        Provider.of<AudioPlayerViewModel>(context, listen: false);
+    final fileId = audioPlayerViewModel.currentFileId;
+    final progress = audioPlayerViewModel.lastProgressPercentage;
+
+    if (fileId != null) {
+      // Cancel any existing timer
+      _debounceTimer?.cancel();
+
+      // Start a new debounce timer
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          // Check if the widget is still in the tree
+          setState(() {
+            _fileProgress[fileId] = progress;
+          });
+        }
+      });
+    }
+  }
+
   void _handleIntentViewModelChange() {
+    if (isDialogOpen) return;
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     if (intentViewModel.sharedFiles.isNotEmpty) {
@@ -152,6 +165,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _scrollController.dispose();
+    _debounceTimer?.cancel();
     final intentViewModel =
         Provider.of<IntentViewModel>(context, listen: false);
     intentViewModel.removeListener(_handleIntentViewModelChange);

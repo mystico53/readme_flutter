@@ -5,6 +5,7 @@ import 'package:readme_app/view_models/audioplayer_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
@@ -41,6 +42,9 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   String _errorMessage = '';
   DateTime? _startTime;
   double _playbackSpeed = 1.0; // Playback speed state
+  Timer? _positionUpdateTimer;
+  StreamSubscription? _playbackStateSubscription;
+  StreamSubscription? _mediaItemSubscription;
 
   @override
   void initState() {
@@ -52,11 +56,10 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       album: widget.album,
     );
     _initAudio();
-    _listenToAudioHandlerState();
   }
 
   void _listenToAudioHandlerState() {
-    _audioHandler.playbackState.listen((state) {
+    _playbackStateSubscription = _audioHandler.playbackState.listen((state) {
       setState(() {
         _isPlaying = state.playing;
         _currentPosition = state.position;
@@ -66,11 +69,21 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       widget.viewModel.updatePosition(state.position);
     });
 
-    (_audioHandler as MyAudioHandler).currentMediaItem.listen((mediaItem) {
+    _mediaItemSubscription =
+        (_audioHandler as MyAudioHandler).currentMediaItem.listen((mediaItem) {
       if (mediaItem != null) {
         setState(() {
           _totalDuration = mediaItem.duration ?? Duration.zero;
         });
+      }
+    });
+  }
+
+  void _startPositionUpdateTimer() {
+    _positionUpdateTimer?.cancel();
+    _positionUpdateTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_isPlaying && !_isBuffering) {
+        widget.viewModel.updatePosition(_currentPosition);
       }
     });
   }
@@ -86,12 +99,19 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   Future<void> _initAudio() async {
+    setState(() {
+      _isBuffering = true;
+      _errorMessage = '';
+    });
+
     if (widget.audioUrl.isEmpty) {
       setState(() {
         _totalDuration = Duration.zero;
         _isAudioLoaded = false;
+        _isBuffering = false;
         _errorMessage = 'Select or create a Lisme';
       });
+      widget.viewModel.setPlaying(false);
       return;
     }
 
@@ -113,33 +133,48 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           await widget.viewModel.getStoredPosition(widget.fileId);
       if (storedPosition != null) {
         await _audioHandler.seek(storedPosition);
-        setState(() {
-          _currentPosition = storedPosition;
-        });
+        _currentPosition = storedPosition;
       }
 
       widget.viewModel.startPeriodicUpdate(_totalDuration, widget.fileId);
 
+      _listenToAudioHandlerState();
+      _startPositionUpdateTimer();
+
       setState(() {
         _isAudioLoaded = true;
+        _isBuffering = false;
         _errorMessage = '';
       });
 
-      await _audioHandler.play();
+      // Note: The following line was in your original code.
+      // Uncommenting it will auto-play the audio when loaded.
+      //await _audioHandler.play();
     } catch (e) {
-      print('Error setting audio source: ${e.toString()}');
-      setState(() {
-        _totalDuration = Duration.zero;
-        _isAudioLoaded = false;
-        _errorMessage = 'Failed to load audio';
-      });
+      _handleError('Failed to load audio: ${e.toString()}');
     }
   }
 
   @override
   void dispose() {
-    // No need to dispose of _audioHandler, it's managed externally
+    _positionUpdateTimer?.cancel();
+    _playbackStateSubscription?.cancel();
+    _mediaItemSubscription?.cancel();
     super.dispose();
+  }
+
+  void _handleError(String message) {
+    print('AudioPlayer Error: $message');
+    setState(() {
+      _totalDuration = Duration.zero;
+      _currentPosition = Duration.zero;
+      _isAudioLoaded = false;
+      _isBuffering = false;
+      _errorMessage = message;
+    });
+    widget.viewModel.setPlaying(false);
+    // Optionally, you could notify a global error handling service here
+    // errorHandlingService.reportError(message);
   }
 
   String _formatDuration(Duration duration) {
@@ -195,6 +230,8 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     final maxReportedPositionPercentage = totalDurationValue > 0
         ? maxReportedPositionValue / totalDurationValue
         : 0.0;
+
+    bool isAudioAvailable = widget.audioUrl.isNotEmpty;
 
     return Container(
       color: const Color(0xFF4B473D),
@@ -317,11 +354,13 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     ),
                   );
                 }),
-                onChanged: (value) {
-                  if (value != null) {
-                    _updatePlaybackSpeed(value);
-                  }
-                },
+                onChanged: isAudioAvailable
+                    ? (value) {
+                        if (value != null) {
+                          _updatePlaybackSpeed(value);
+                        }
+                      }
+                    : null,
               ),
               const SizedBox(width: 10),
               GestureDetector(
@@ -334,53 +373,65 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   await widget.viewModel.resetProgress(widget.fileId);
                 },
                 child: IconButton(
-                  onPressed: () async {
-                    await _audioHandler.stop();
-                    await _audioHandler.seek(Duration.zero);
-                    setState(() {
-                      _currentPosition = Duration.zero;
-                    });
-                  },
-                  icon: const Icon(Icons.stop, color: Color(0xFFFFEFC3)),
+                  onPressed: isAudioAvailable
+                      ? () async {
+                          await _audioHandler.stop();
+                          await _audioHandler.seek(Duration.zero);
+                          setState(() {
+                            _currentPosition = Duration.zero;
+                          });
+                        }
+                      : null,
+                  icon: Icon(Icons.stop,
+                      color: isAudioAvailable
+                          ? const Color(0xFFFFEFC3)
+                          : const Color(0xFF8B8778)),
                 ),
               ),
               const SizedBox(width: 10),
               IconButton(
-                onPressed: _jumpBackward,
-                icon: const Icon(Icons.replay_10, color: Color(0xFFFFEFC3)),
+                onPressed: isAudioAvailable ? _jumpBackward : null,
+                icon: Icon(Icons.replay_10,
+                    color: isAudioAvailable
+                        ? const Color(0xFFFFEFC3)
+                        : const Color(0xFF8B8778)),
               ),
               const SizedBox(width: 10),
-              GestureDetector(
-                onLongPress: () async {
-                  await _audioHandler.seek(_currentPosition);
-                  await _audioHandler.play();
-                },
-                child: IconButton(
-                  onPressed: () async {
-                    if (_isPlaying) {
-                      await _audioHandler.pause();
-                    } else {
-                      if (_currentPosition >= _totalDuration) {
-                        await _audioHandler.seek(Duration.zero);
+              IconButton(
+                onPressed: isAudioAvailable
+                    ? () async {
+                        if (_isPlaying) {
+                          await _audioHandler.pause();
+                        } else {
+                          if (_currentPosition >= _totalDuration) {
+                            await _audioHandler.seek(Duration.zero);
+                          }
+                          await _audioHandler.play();
+                        }
                       }
-                      await _audioHandler.play();
-                    }
-                  },
-                  icon: Icon(
-                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: const Color(0xFFFFEFC3),
-                  ),
+                    : null,
+                icon: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: isAudioAvailable
+                      ? const Color(0xFFFFEFC3)
+                      : const Color(0xFF8B8778),
                 ),
               ),
               const SizedBox(width: 10),
               IconButton(
-                onPressed: _jumpForward,
-                icon: const Icon(Icons.forward_10, color: Color(0xFFFFEFC3)),
+                onPressed: isAudioAvailable ? _jumpForward : null,
+                icon: Icon(Icons.forward_10,
+                    color: isAudioAvailable
+                        ? const Color(0xFFFFEFC3)
+                        : const Color(0xFF8B8778)),
               ),
               const SizedBox(width: 10),
               IconButton(
-                onPressed: _jumpToMaxReportedPosition,
-                icon: const Icon(Icons.skip_next, color: Color(0xFFFFEFC3)),
+                onPressed: isAudioAvailable ? _jumpToMaxReportedPosition : null,
+                icon: Icon(Icons.skip_next,
+                    color: isAudioAvailable
+                        ? const Color(0xFFFFEFC3)
+                        : const Color(0xFF8B8778)),
               ),
               const SizedBox(width: 10),
             ],
