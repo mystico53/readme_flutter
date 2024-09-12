@@ -47,15 +47,18 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   StreamSubscription? _mediaItemSubscription;
 
   @override
+  @override
   void initState() {
     super.initState();
     _audioHandler = Provider.of<AudioHandler>(context, listen: false);
-    widget.viewModel.setTrackInfo(
-      title: widget.audioTitle,
-      artist: widget.artist,
-      album: widget.album,
-    );
-    _initAudio();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.viewModel.setTrackInfo(
+        title: widget.audioTitle,
+        artist: widget.artist,
+        album: widget.album,
+      );
+      _initAudio();
+    });
   }
 
   void _listenToAudioHandlerState() {
@@ -111,7 +114,9 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         _isBuffering = false;
         _errorMessage = 'Select or create a Lisme';
       });
-      widget.viewModel.setPlaying(false);
+      Future.microtask(() {
+        widget.viewModel.setPlaying(false);
+      });
       return;
     }
 
@@ -147,9 +152,10 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         _errorMessage = '';
       });
 
-      // Note: The following line was in your original code.
-      // Uncommenting it will auto-play the audio when loaded.
-      //await _audioHandler.play();
+      // We're not auto-playing, so we set playing to false
+      Future.microtask(() {
+        widget.viewModel.setPlaying(false);
+      });
     } catch (e) {
       _handleError('Failed to load audio: ${e.toString()}');
     }

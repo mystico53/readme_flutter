@@ -260,7 +260,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               MainAxisAlignment.center,
                                           children: [
                                             const Text(
-                                              'Listen \n to your news articles \n on a playlist',
+                                              'Lisme is \n your playlist \n for news articles',
                                               style: TextStyle(
                                                 color: Color(0xFF4B473D),
                                                 fontSize: 24,
@@ -304,7 +304,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                             vertical: 8)),
                                               ),
                                               child: const Text(
-                                                'Show me how',
+                                                'Create',
                                                 style: TextStyle(
                                                   color: Color(0xFF4B473D),
                                                   fontSize: 18,

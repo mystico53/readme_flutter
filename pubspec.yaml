@@ -9,12 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.0
+  http: ^1.2.2
   receive_sharing_intent: ^1.8.0
-  audioplayers: ^6.0.0
+  audioplayers: ^6.1.0
   cloud_firestore: ^5.1.0
   firebase_crashlytics: ^4.0.3
-  uuid: ^4.4.2
+  uuid: ^4.5.0
   shared_preferences: ^2.2.3
   firebase_core: ^3.2.0
   cloud_functions: ^5.0.3
@@ -24,11 +24,11 @@ dependencies:
   smooth_page_indicator: ^1.2.0
   firebase_storage: ^12.1.1
   google_fonts: ^6.2.1
-  just_audio: ^0.9.39
+  just_audio: ^0.9.40
   webview_flutter: ^4.8.0
   chaleno: ^0.0.8
   url_launcher: ^6.3.0
-  app_links: ^6.1.4
+  app_links: ^6.3.2
   flutter_secure_storage: ^9.2.2
   audio_service: ^0.18.15
 

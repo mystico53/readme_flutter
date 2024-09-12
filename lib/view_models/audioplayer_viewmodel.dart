@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:readme_app/services/audio_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 
 class AudioPlayerViewModel extends ChangeNotifier {
   late Duration _maxReportedPosition = Duration.zero;
@@ -36,19 +37,22 @@ class AudioPlayerViewModel extends ChangeNotifier {
   String get album => _album;
 
   AudioPlayerViewModel(this._audioHandler) {
-    _loadPrefs();
-    _listenToAudioHandlerState();
-    loadAllFileProgress();
+    _loadPrefs().then((_) {
+      _listenToAudioHandlerState();
+      loadAllFileProgress().then((_) {
+        notifyListeners();
+      });
+    });
   }
 
   void setTrackInfo({required String title, String? artist, String? album}) {
     _title = title;
     _artist = artist ?? "Lisme";
     _album = album ?? "Lisme";
-    notifyListeners();
-
-    // Update the MediaItem in the AudioHandler
-    _updateMediaItem();
+    Future.microtask(() {
+      notifyListeners();
+      _updateMediaItem();
+    });
   }
 
   void _updateMediaItem() {
@@ -182,8 +186,6 @@ class AudioPlayerViewModel extends ChangeNotifier {
         _allFileProgress[fileId] = progress;
       }
     }
-
-    notifyListeners();
   }
 
   // Method to update progress for a specific file
@@ -204,7 +206,9 @@ class AudioPlayerViewModel extends ChangeNotifier {
         // Update the progress in the allFileProgress map
         _allFileProgress[_currentFileId!] = _lastProgressPercentage / 100;
 
-        notifyListeners();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
       }
     }
   }
@@ -219,13 +223,18 @@ class AudioPlayerViewModel extends ChangeNotifier {
   }
 
   void setPlaying(bool isPlaying) {
-    _isPlaying = isPlaying;
-    if (isPlaying) {
-      startTotalTimePlayedTimer();
-    } else {
-      _timePlayedTimer?.cancel();
+    if (_isPlaying != isPlaying) {
+      _isPlaying = isPlaying;
+      if (isPlaying) {
+        startTotalTimePlayedTimer();
+      } else {
+        _timePlayedTimer?.cancel();
+      }
+      // Use Future.microtask to schedule the notification
+      Future.microtask(() {
+        notifyListeners();
+      });
     }
-    notifyListeners();
   }
 
   Future<void> saveProgress(String fileId, Duration position) async {

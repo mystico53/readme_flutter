@@ -35,6 +35,14 @@ subprojects {
             }
         }
     }
+    
+    configurations.all {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.jetbrains.kotlin') {
+                details.useVersion kotlin_version
+            }
+        }
+    }
 }
 
 rootProject.buildDir = '../build'
