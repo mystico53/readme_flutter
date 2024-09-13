@@ -32,6 +32,143 @@ class AudioPlayerWidget extends StatefulWidget {
   AudioPlayerWidgetState createState() => AudioPlayerWidgetState();
 }
 
+class CustomSliderTrackShape extends SliderTrackShape {
+  final double maxReportedPositionValue;
+  final double totalDurationValue;
+  final Color totalTrackColor;
+  final Color maxReportedTrackColor;
+  final Color currentTrackColor;
+
+  CustomSliderTrackShape({
+    required this.maxReportedPositionValue,
+    required this.totalDurationValue,
+    required this.totalTrackColor,
+    required this.maxReportedTrackColor,
+    required this.currentTrackColor,
+  });
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required Animation<double> enableAnimation,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    required RenderBox parentBox,
+    Offset? secondaryOffset,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required Offset thumbCenter,
+  }) {
+    if (sliderTheme.trackHeight == null || sliderTheme.trackHeight! <= 0) {
+      return;
+    }
+
+    final double trackHeight = sliderTheme.trackHeight!;
+    final Rect trackRect = getPreferredRect(
+      parentBox: parentBox,
+      sliderTheme: sliderTheme,
+      offset: offset,
+      isEnabled: isEnabled,
+      isDiscrete: isDiscrete,
+    );
+
+    // Define the border color
+    final Color borderColor = const Color(0xFFFFEFC3);
+
+    // Create the Paint for the total track (background)
+    final Paint totalTrackPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Adjust the trackRect to ensure the stroke is drawn inside
+    final Rect adjustedTrackRect = trackRect.deflate(0.5);
+
+    // Draw the total track (background) as transparent with border
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        adjustedTrackRect,
+        Radius.circular(trackHeight / 2),
+      ),
+      totalTrackPaint,
+    );
+
+    // Calculate percentages
+    final double maxReportedPercent =
+        (maxReportedPositionValue / totalDurationValue).clamp(0.0, 1.0);
+
+    final double currentPercent =
+        ((thumbCenter.dx - trackRect.left) / trackRect.width).clamp(0.0, 1.0);
+
+    // Draw the max reported position track
+    final Rect maxReportedTrackRect = Rect.fromLTWH(
+      trackRect.left,
+      trackRect.top,
+      trackRect.width * maxReportedPercent,
+      trackHeight,
+    );
+
+    final Paint maxReportedTrackPaint = Paint()
+      ..color = maxReportedTrackColor
+      ..style = PaintingStyle.fill;
+
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        maxReportedTrackRect,
+        Radius.circular(trackHeight / 2),
+      ),
+      maxReportedTrackPaint,
+    );
+
+    // Draw the current position track
+    final Rect currentTrackRect = Rect.fromLTWH(
+      trackRect.left,
+      trackRect.top,
+      trackRect.width * currentPercent,
+      trackHeight,
+    );
+
+    final Paint currentTrackPaint = Paint()
+      ..color = currentTrackColor
+      ..style = PaintingStyle.fill;
+
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        currentTrackRect,
+        Radius.circular(trackHeight / 2),
+      ),
+      currentTrackPaint,
+    );
+  }
+
+  @override
+  Rect getPreferredRect({
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    Offset offset = Offset.zero,
+    bool isEnabled = false,
+    bool isDiscrete = false,
+  }) {
+    final double thumbRadius =
+        sliderTheme.thumbShape!.getPreferredSize(isEnabled, isDiscrete).width /
+            2.0;
+    final double trackHeight = sliderTheme.trackHeight ?? 4.0;
+
+    // Define the total padding you want to apply to the track
+    final double trackPadding = 40.0; // Adjust this value as needed
+
+    // Calculate the adjusted trackLeft and trackWidth
+    final double trackLeft = offset.dx + thumbRadius + trackPadding / 2;
+    final double trackTop =
+        offset.dy + (parentBox.size.height - trackHeight) / 2;
+    final double trackWidth =
+        parentBox.size.width - 2 * thumbRadius - trackPadding;
+
+    return Rect.fromLTWH(trackLeft, trackTop, trackWidth, trackHeight);
+  }
+}
+
 class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   late AudioHandler _audioHandler;
   bool _isPlaying = false;
@@ -298,47 +435,36 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               ? Row(
                   children: [
                     SizedBox(
-                      width: 80,
+                      width: 60,
                       child: Text(
                         currentPositionString,
                         style: const TextStyle(color: Color(0xFFFFEFC3)),
                       ),
                     ),
                     Expanded(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Swapped the values of the two sliders here
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 2,
-                              thumbColor: Colors.transparent,
-                              activeTrackColor: const Color(0xFFFFEFC3),
-                              inactiveTrackColor: Colors.transparent,
-                              overlayColor: Colors.transparent,
-                            ),
-                            child: Slider(
-                              value: currentPositionValue,
-                              min: 0.0,
-                              max: totalDurationValue,
-                              onChanged: null, // Non-interactive
-                            ),
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 6,
+                          thumbColor: const Color(0xFFFFEFC3),
+                          activeTrackColor: Colors.transparent,
+                          inactiveTrackColor: Colors.transparent,
+                          overlayColor: Colors.transparent,
+                          thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 8.0),
+                          trackShape: CustomSliderTrackShape(
+                            maxReportedPositionValue: maxReportedPositionValue,
+                            totalDurationValue: totalDurationValue,
+                            totalTrackColor: Colors.grey[800]!,
+                            maxReportedTrackColor: Colors.grey[500]!,
+                            currentTrackColor: const Color(0xFFFFEFC3),
                           ),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 4,
-                              thumbColor: const Color(0xFFFFEFC3),
-                              activeTrackColor: const Color(0xFFFFEFC3),
-                              inactiveTrackColor: Colors.transparent,
-                            ),
-                            child: Slider(
-                              value: maxReportedPositionValue,
-                              min: 0.0,
-                              max: totalDurationValue,
-                              onChanged: _seekAudio, // Interactive
-                            ),
-                          ),
-                        ],
+                        ),
+                        child: Slider(
+                          value: currentPositionValue,
+                          min: 0.0,
+                          max: totalDurationValue,
+                          onChanged: _seekAudio,
+                        ),
                       ),
                     ),
                     Text(
