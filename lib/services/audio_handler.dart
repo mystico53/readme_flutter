@@ -76,12 +76,11 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   }
 
   void _broadcastState(PlaybackEvent event) {
-    final playing = _player.playing;
+    final playing =
+        _player.playing && _player.processingState != ProcessingState.completed;
     playbackState.add(playbackState.value.copyWith(
       controls: [
-        // Index 0
         if (playing) MediaControl.pause else MediaControl.play,
-        // Index 1
         MediaControl.stop,
       ],
       androidCompactActionIndices: const [0, 1],
