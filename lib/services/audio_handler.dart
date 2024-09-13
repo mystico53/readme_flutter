@@ -77,17 +77,12 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     final playing = _player.playing;
     playbackState.add(playbackState.value.copyWith(
       controls: [
-        //MediaControl.rewind,
+        // Index 0
         if (playing) MediaControl.pause else MediaControl.play,
+        // Index 1
         MediaControl.stop,
-        //MediaControl.fastForward,
       ],
-      systemActions: const {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-      },
-      androidCompactActionIndices: const [0, 1, 3],
+      androidCompactActionIndices: const [0, 1],
       processingState: const {
         ProcessingState.idle: AudioProcessingState.idle,
         ProcessingState.loading: AudioProcessingState.loading,
