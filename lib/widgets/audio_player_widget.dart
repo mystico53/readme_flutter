@@ -45,6 +45,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   Timer? _positionUpdateTimer;
   StreamSubscription? _playbackStateSubscription;
   StreamSubscription? _mediaItemSubscription;
+  StreamSubscription<Duration>? _positionStreamSubscription;
 
   @override
   @override
@@ -58,6 +59,16 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         album: widget.album,
       );
       _initAudio();
+      _initPositionListener();
+    });
+  }
+
+  void _initPositionListener() {
+    _positionStreamSubscription =
+        (_audioHandler as MyAudioHandler).positionStream.listen((position) {
+      setState(() {
+        _currentPosition = position;
+      });
     });
   }
 
@@ -94,8 +105,6 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   @override
   void didUpdateWidget(AudioPlayerWidget oldWidget) {
     if (oldWidget.audioUrl != widget.audioUrl) {
-      // We don't need to dispose of the AudioHandler as it's managed externally
-      // Instead, we'll reinitialize the audio with the new URL
       _initAudio();
     }
     super.didUpdateWidget(oldWidget);
@@ -163,6 +172,8 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
   @override
   void dispose() {
+    _positionStreamSubscription
+        ?.cancel(); // Cancel the position stream subscription
     _positionUpdateTimer?.cancel();
     _playbackStateSubscription?.cancel();
     _mediaItemSubscription?.cancel();
@@ -297,6 +308,7 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          // Swapped the values of the two sliders here
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
                               trackHeight: 2,
@@ -306,14 +318,10 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                               overlayColor: Colors.transparent,
                             ),
                             child: Slider(
-                              value: widget
-                                  .viewModel.maxReportedPosition.inMilliseconds
-                                  .toDouble()
-                                  .clamp(0.0, totalDurationValue),
+                              value: currentPositionValue,
                               min: 0.0,
                               max: totalDurationValue,
-                              onChanged:
-                                  null, // Make this slider non-interactive
+                              onChanged: null, // Non-interactive
                             ),
                           ),
                           SliderTheme(
@@ -324,11 +332,10 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                               inactiveTrackColor: Colors.transparent,
                             ),
                             child: Slider(
-                              value: currentPositionValue.clamp(
-                                  0.0, totalDurationValue),
+                              value: maxReportedPositionValue,
                               min: 0.0,
                               max: totalDurationValue,
-                              onChanged: _seekAudio,
+                              onChanged: _seekAudio, // Interactive
                             ),
                           ),
                         ],

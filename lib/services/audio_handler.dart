@@ -33,6 +33,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         (state) => state.processingState == AudioProcessingState.idle);
   }
 
+  Stream<Duration> get positionStream => _player.positionStream;
+
   @override
   Future<void> setSpeed(double speed) => _player.setSpeed(speed);
 
