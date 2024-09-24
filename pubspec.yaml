@@ -1,8 +1,7 @@
 name: readme_app
 description: "Listen to your texts"
 publish_to: 'none'
-version: 0.1.0+18
-
+version: 0.1.0+19
 environment:
   sdk: '>=2.17.0 <3.0.0'
 

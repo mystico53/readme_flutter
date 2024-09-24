@@ -688,20 +688,58 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                           } else {
                             // Log the loading state
                             print("Waiting for documents...");
-                            return const CircularProgressIndicator();
+                            return Center(
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFEFC3),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF4B473D)),
+                                    strokeWidth: 4,
+                                  ),
+                                ),
+                              ),
+                            );
                           }
                         },
                       )
-                    : const Center(
-                        child: SizedBox(
-                          width: 60, // Increased size
-                          height: 60, // Increased size
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(
-                                0xFF4B473D)), // Changed color to match the app's theme
-                            strokeWidth:
-                                6, // Increased stroke width for better visibility
-                          ),
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFEFC3),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xFF4B473D)),
+                                  strokeWidth: 4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              "Looks a bit empty here,\nlet's change that",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFF4B473D),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
               ),
