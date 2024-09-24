@@ -12,14 +12,24 @@ class VoiceSelectionWidget extends StatefulWidget {
 
 class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
   List<VoiceModel> voices = [
+    // English voices
+    VoiceModel(
+        name: "🇺🇸 Franky's Voice (HD)",
+        languageCode: "en-US",
+        voiceName: "en-US-Studio-Q",
+        speakingRate: 0.9),
+    VoiceModel(
+        name: "🇺🇸 Serene's Voice (HD)",
+        languageCode: "en-US",
+        voiceName: "en-US-Studio-O",
+        speakingRate: 0.85),
     VoiceModel(
         name: "🇺🇸 Craig's Voice (News)",
         languageCode: "en-US",
-        //voiceName: "en-US-News-N",
         voiceName: "en-US-Standard-D",
         speakingRate: 0.85),
     VoiceModel(
-        name: "🇺🇸 Gordon's Voice",
+        name: "🇺🇸 Gordon's Voice (Low)",
         languageCode: "en-US",
         voiceName: "en-US-Neural2-J",
         speakingRate: 0.9),
@@ -29,22 +39,23 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
         voiceName: "en-US-Polyglot-1",
         speakingRate: 0.85),
     VoiceModel(
-        name: "🇺🇸 Serene's Voice (Elite)",
-        languageCode: "en-US",
-        voiceName: "en-US-Studio-O",
-        speakingRate: 0.85),
-    VoiceModel(
-        name: "🇺🇸 Franky's Voice (Elite)",
-        languageCode: "en-US",
-        voiceName: "en-US-Studio-Q",
-        speakingRate: 0.9),
-    VoiceModel(
-        name: "🇬🇧 Bishop's Voice",
+        name: "🇬🇧 Bishop's Voice (Low)",
         languageCode: "en-GB",
         voiceName: "en-GB-Neural2-D",
         speakingRate: 0.85),
+    // German voices
     VoiceModel(
-        name: "🇩🇪 Sabine's Voice",
+        name: "🇩🇪 Stefan's Voice (HD)",
+        languageCode: "de-DE",
+        voiceName: "de-DE-Studio-B",
+        speakingRate: 1.0),
+    VoiceModel(
+        name: "🇩🇪 Jutta's Voice (HD)",
+        languageCode: "de-DE",
+        voiceName: "de-DE-Studio-C",
+        speakingRate: 1.0),
+    VoiceModel(
+        name: "🇩🇪 Sabine's Voice (Low)",
         languageCode: "de-DE",
         voiceName: "de-DE-Neural2-C",
         speakingRate: 1.0),
@@ -53,17 +64,6 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
         languageCode: "de-DE",
         voiceName: "de-DE-Polyglot-1",
         speakingRate: 1.0),
-    VoiceModel(
-        name: "🇩🇪 Stefan's Voice (Elite)",
-        languageCode: "de-DE",
-        voiceName: "de-DE-Studio-B",
-        speakingRate: 1.0),
-    VoiceModel(
-        name: "🇩🇪 Jutta's Voice (Elite)",
-        languageCode: "de-DE",
-        voiceName: "de-DE-Studio-C",
-        speakingRate: 1.0)
-    // Add more voice options as needed
   ];
 
   VoiceModel? selectedVoice;
@@ -71,9 +71,9 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
   @override
   void initState() {
     super.initState();
-    // Initialize selectedVoice with Craig's VoiceModel
+    // Initialize selectedVoice with Franky's VoiceModel
     selectedVoice = voices.firstWhere(
-        (voice) => voice.name == "🇺🇸 Craig (News)",
+        (voice) => voice.name == "🇺🇸 Franky's Voice (Elite)",
         orElse: () => voices.first);
   }
 
@@ -84,7 +84,7 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
         canvasColor: Color(0xFFFFEFC3),
       ),
       child: Container(
-        width: 200, // Set your desired width here
+        width: 200,
         child: DropdownButton<VoiceModel>(
           value: selectedVoice,
           hint: Text(
@@ -104,12 +104,11 @@ class _VoiceSelectionWidgetState extends State<VoiceSelectionWidget> {
               value: voice,
               child: Text(
                 voice.name,
-                style:
-                    TextStyle(color: Color(0xFF4B473D)), //font color in webview
+                style: TextStyle(color: Color(0xFF4B473D)),
               ),
             );
           }).toList(),
-          iconEnabledColor: Color(0xFF4B473D), //
+          iconEnabledColor: Color(0xFF4B473D),
           style: TextStyle(color: Color(0xFFFFEFC3), fontSize: 16),
           underline: SizedBox(),
           isDense: true,
