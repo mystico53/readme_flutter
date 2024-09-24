@@ -286,12 +286,11 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                 elevation:
                                                     MaterialStateProperty.all(
                                                         0),
-                                                shape:
-                                                    MaterialStateProperty.all(
-                                                        RoundedRectangleBorder(
+                                                shape: MaterialStateProperty.all(
+                                                    const RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.zero,
-                                                  side: const BorderSide(
+                                                  side: BorderSide(
                                                     color: Color(0xFF4B473D),
                                                     width: 1,
                                                   ),
@@ -693,7 +692,18 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                           }
                         },
                       )
-                    : const Center(child: CircularProgressIndicator()),
+                    : const Center(
+                        child: SizedBox(
+                          width: 60, // Increased size
+                          height: 60, // Increased size
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(
+                                0xFF4B473D)), // Changed color to match the app's theme
+                            strokeWidth:
+                                6, // Increased stroke width for better visibility
+                          ),
+                        ),
+                      ),
               ),
               AudioPlayerWidget(
                 audioUrl: selectedAudioUrl,
