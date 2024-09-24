@@ -375,16 +375,16 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                           data?['httpsUrl'] as String?;
                                       final title = data?['title'] as String?;
                                       if (httpsUrl != null &&
-                                          httpsUrl.isNotEmpty &&
-                                          title != null) {
+                                          httpsUrl.isNotEmpty) {
                                         setState(() {
                                           selectedAudioUrl = httpsUrl;
-                                          selectedAudioTitle = title;
+                                          selectedAudioTitle = title ??
+                                              'Title generation failed'; // Add fallback here too
                                           selectedFileId = fileId;
                                         });
                                       } else {
                                         print(
-                                            'Audio URL or title is missing or invalid for document: $fileId');
+                                            'Audio URL is missing or invalid for document: $fileId');
                                       }
                                     },
                                     child: Container(
