@@ -376,10 +376,19 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                       final title = data?['title'] as String?;
                                       if (httpsUrl != null &&
                                           httpsUrl.isNotEmpty) {
+                                        final audioPlayerViewModel =
+                                            Provider.of<AudioPlayerViewModel>(
+                                                context,
+                                                listen: false);
+                                        audioPlayerViewModel.loadAndPlayAudio(
+                                            fileId,
+                                            httpsUrl,
+                                            title ?? 'Title generation failed');
+
                                         setState(() {
                                           selectedAudioUrl = httpsUrl;
                                           selectedAudioTitle = title ??
-                                              'Title generation failed'; // Add fallback here too
+                                              'Title generation failed';
                                           selectedFileId = fileId;
                                         });
                                       } else {

@@ -75,6 +75,34 @@ class AudioPlayerViewModel extends ChangeNotifier {
     });
   }
 
+  Future<void> loadAndPlayAudio(
+      String fileId, String audioUrl, String title) async {
+    setCurrentFileId(fileId);
+    setTrackInfo(title: title);
+
+    // Load the audio
+    await _audioHandler.customAction('loadAudio', {
+      'url': audioUrl,
+      'fileId': fileId,
+    });
+
+    // Get the stored position
+    Duration? storedPosition = await getStoredPosition(fileId);
+
+    // Seek to the stored position if available
+    if (storedPosition != null) {
+      await _audioHandler.seek(storedPosition);
+    }
+
+    // Start playing
+    await _audioHandler.play();
+    setPlaying(true);
+
+    // Start the periodic update
+    final duration = _audioHandler.mediaItem.value?.duration ?? Duration.zero;
+    startPeriodicUpdate(duration, fileId);
+  }
+
   // Added SharedPreferences instance
   SharedPreferences? _prefs;
 
